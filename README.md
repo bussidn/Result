@@ -1,0 +1,2 @@
+# Result
+Railway oriented programming ?
