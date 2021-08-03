@@ -11,8 +11,12 @@ final class Success<S, F> implements Result<S, F> {
 
     private final S value;
 
-    public Success(S value) {
+    private Success(S value) {
         this.value = requireNonNull(value);
+    }
+
+    public static <S, F> Success<S, F> success(S value) {
+        return new Success<>(value);
     }
 
     @Override

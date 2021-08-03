@@ -11,8 +11,12 @@ final class Failure<S, F> implements Result<S, F> {
 
     private final F value;
 
-    public Failure(F value) {
+    private Failure(F value) {
         this.value = requireNonNull(value);
+    }
+
+    public static <S, F> Failure<S, F> failure(F value) {
+        return new Failure<>(value);
     }
 
     @Override
