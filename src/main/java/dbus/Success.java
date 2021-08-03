@@ -1,12 +1,15 @@
 package dbus;
 
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
+import java.util.Objects;
 import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
 
 @EqualsAndHashCode
+@ToString
 final class Success<S, F> implements Result<S, F> {
 
     private final S value;
@@ -24,6 +27,13 @@ final class Success<S, F> implements Result<S, F> {
             Function<? super Success<S, F>, ? extends R> success,
             Function<? super Failure<S, F>, ? extends R> failure
     ) {
+        requireNonNull(failure);
         return success.apply(this);
+    }
+
+    @Override
+    public <R> Result<R, F> map(Function<? super S, ? extends R> mapper) {
+        Objects.requireNonNull(mapper);
+        return new Success<>(mapper.apply(this.value));
     }
 }
