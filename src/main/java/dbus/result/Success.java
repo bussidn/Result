@@ -26,11 +26,11 @@ final class Success<S, F> implements Result<S, F> {
 
     @Override
     public <R> R match(
-            Function<? super Success<S, F>, ? extends R> success,
-            Function<? super Failure<S, F>, ? extends R> failure
+            Function<? super S, ? extends R> success,
+            Function<? super F, ? extends R> failure
     ) {
         requireNonNull(failure);
-        return success.apply(this);
+        return success.apply(value);
     }
 
     @Override

@@ -72,16 +72,16 @@ class VoidResultTest {
         @Test
         public void match_should_execute_failure_function_when_result_is_a_failure() {
             // given
-            VoidResult<Integer> success = failure(14);
+            VoidResult<Integer> failure = failure(40);
 
             // when
-            String matched = success.match(
+            Integer matched = failure.match(
                     () -> fail("should not be executed"),
-                    failure -> "42"
+                    i -> i + 2
             );
 
             // then
-            assertThat(matched).isEqualTo("42");
+            assertThat(matched).isEqualTo(42);
         }
 
         @ParameterizedTest(name = "match should not accept null success function when result is {0}")

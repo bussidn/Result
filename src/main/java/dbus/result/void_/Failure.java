@@ -24,9 +24,9 @@ final public class Failure<F> implements VoidResult<F> {
     }
 
     @Override
-    public <R> R match(Supplier<? extends R> success, Function<? super Failure<F>, ? extends R> failure) {
+    public <R> R match(Supplier<? extends R> success, Function<? super F, ? extends R> failure) {
         requireNonNull(success);
-        return failure.apply(this);
+        return failure.apply(value);
     }
 
     @Override

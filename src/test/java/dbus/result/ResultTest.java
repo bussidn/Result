@@ -79,7 +79,7 @@ class ResultTest {
             // when
             String matched = success.match(
                     s -> "success",
-                    failure -> fail("should not be executed")
+                    i -> fail("should not be executed")
             );
 
             // then
@@ -89,16 +89,16 @@ class ResultTest {
         @Test
         public void match_should_execute_failure_function_when_result_is_a_failure() {
             // given
-            Result<String, Integer> success = failure(14);
+            Result<String, Integer> failure = failure(14);
 
             // when
-            String matched = success.match(
+            String matched = failure.match(
                     s -> fail("should not be executed"),
-                    failure -> "42"
+                    Object::toString
             );
 
             // then
-            assertThat(matched).isEqualTo("42");
+            assertThat(matched).isEqualTo("14");
         }
 
         @ParameterizedTest(name = "match should not accept null success function when result is {0}")

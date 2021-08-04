@@ -25,11 +25,11 @@ final class Failure<S, F> implements Result<S, F> {
 
     @Override
     public <R> R match(
-            Function<? super Success<S, F>, ? extends R> success,
-            Function<? super Failure<S, F>, ? extends R> failure
+            Function<? super S, ? extends R> success,
+            Function<? super F, ? extends R> failure
     ) {
         requireNonNull(success);
-        return failure.apply(this);
+        return failure.apply(value);
     }
 
     private <ANY> Result<ANY, F> cast() {

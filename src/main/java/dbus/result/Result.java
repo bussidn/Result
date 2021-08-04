@@ -46,7 +46,7 @@ public interface Result<S, F> {
     }
 
     /**
-     * Pattern matching emulation on Result subtypes.
+     * Pattern matching emulation on Result deconstructed subtypes.
      * <p>
      * Indented to be used to provide the two desired behavior in case of success or failure.
      *
@@ -57,8 +57,8 @@ public interface Result<S, F> {
      * @throws NullPointerException if any of its arguments is null
      */
     <R> R match(
-            Function<? super Success<S, F>, ? extends R> success,
-            Function<? super Failure<S, F>, ? extends R> failure
+            Function<? super S, ? extends R> success,
+            Function<? super F, ? extends R> failure
     );
 
     /**

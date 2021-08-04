@@ -45,7 +45,7 @@ public interface VoidResult<F> {
      */
     <R> R match(
             Supplier<? extends R> success,
-            Function<? super Failure<F>, ? extends R> failure
+            Function<? super F, ? extends R> failure
     );
 
     /**
