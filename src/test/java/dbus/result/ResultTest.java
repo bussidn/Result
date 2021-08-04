@@ -1,4 +1,4 @@
-package dbus;
+package dbus.result;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.DisplayName;
@@ -11,8 +11,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.stream.Stream;
 
-import static dbus.Result.failure;
-import static dbus.Result.success;
+import static dbus.result.Result.failure;
+import static dbus.result.Result.success;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;

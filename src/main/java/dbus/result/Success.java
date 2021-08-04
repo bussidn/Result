@@ -1,4 +1,4 @@
-package dbus;
+package dbus.result;
 
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -10,16 +10,16 @@ import static java.util.Objects.requireNonNull;
 
 @EqualsAndHashCode
 @ToString
-final class Failure<S, F> implements Result<S, F> {
+final class Success<S, F> implements Result<S, F> {
 
-    private final F value;
+    private final S value;
 
-    private Failure(F value) {
+    private Success(S value) {
         this.value = requireNonNull(value);
     }
 
-    public static <S, F> Failure<S, F> failure(F value) {
-        return new Failure<>(value);
+    public static <S, F> Success<S, F> success(S value) {
+        return new Success<>(value);
     }
 
     @Override
@@ -27,18 +27,13 @@ final class Failure<S, F> implements Result<S, F> {
             Function<? super Success<S, F>, ? extends R> success,
             Function<? super Failure<S, F>, ? extends R> failure
     ) {
-        requireNonNull(success);
-        return failure.apply(this);
-    }
-
-    private <ANY> Result<ANY, F> cast() {
-        //noinspection unchecked
-        return (Result<ANY, F>) this;
+        requireNonNull(failure);
+        return success.apply(this);
     }
 
     @Override
     public <R> Result<R, F> map(Function<? super S, ? extends R> mapper) {
         Objects.requireNonNull(mapper);
-        return this.cast();
+        return new Success<>(mapper.apply(this.value));
     }
 }

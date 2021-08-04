@@ -1,4 +1,4 @@
-package dbus;
+package dbus.result;
 
 import java.util.function.Function;
 
