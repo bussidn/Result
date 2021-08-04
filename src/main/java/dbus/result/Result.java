@@ -1,5 +1,8 @@
 package dbus.result;
 
+import dbus.result.void_.VoidResult;
+
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -70,5 +73,17 @@ public interface Result<S, F> {
      * @throws NullPointerException when provided mapper is null
      */
     <R> Result<R, F> map(Function<? super S, ? extends R> mapper);
+
+    /**
+     * bridge function for Result functor.
+     * <p>
+     * It applies the provided consumer to the success value if this is a success.
+     * Returns the current failure otherwise as a VoidResult.Failure.
+     *
+     * @param consumer the consumer to apply to the success
+     * @return a Result containing either a void success or the current failure
+     * @throws NullPointerException when provided mapper is null
+     */
+    VoidResult<F> map(Consumer<? super S> consumer);
 
 }

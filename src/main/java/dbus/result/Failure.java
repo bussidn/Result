@@ -1,9 +1,10 @@
 package dbus.result;
 
+import dbus.result.void_.VoidResult;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
@@ -38,7 +39,13 @@ final class Failure<S, F> implements Result<S, F> {
 
     @Override
     public <R> Result<R, F> map(Function<? super S, ? extends R> mapper) {
-        Objects.requireNonNull(mapper);
+        requireNonNull(mapper);
         return this.cast();
+    }
+
+    @Override
+    public VoidResult<F> map(Consumer<? super S> consumer) {
+        requireNonNull(consumer);
+        return VoidResult.failure(value);
     }
 }

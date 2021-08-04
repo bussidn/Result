@@ -1,9 +1,11 @@
 package dbus.result;
 
+import dbus.result.void_.VoidResult;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
@@ -35,5 +37,11 @@ final class Success<S, F> implements Result<S, F> {
     public <R> Result<R, F> map(Function<? super S, ? extends R> mapper) {
         Objects.requireNonNull(mapper);
         return new Success<>(mapper.apply(this.value));
+    }
+
+    @Override
+    public VoidResult<F> map(Consumer<? super S> consumer) {
+        consumer.accept(value);
+        return VoidResult.success();
     }
 }
