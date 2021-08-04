@@ -48,7 +48,7 @@ public interface Result<S, F> {
     /**
      * Pattern matching emulation on Result subtypes.
      * <p>
-     * Indented to be used to provide the two desired behavior in cas of success or failure.
+     * Indented to be used to provide the two desired behavior in case of success or failure.
      *
      * @param success the desired behavior in case of success.
      * @param failure the desired behavior in cas of failure
@@ -75,14 +75,14 @@ public interface Result<S, F> {
     <R> Result<R, F> map(Function<? super S, ? extends R> mapper);
 
     /**
-     * bridge function for Result functor.
+     * bridge function for Result functor to VoidResult.
      * <p>
      * It applies the provided consumer to the success value if this is a success.
      * Returns the current failure otherwise as a VoidResult.Failure.
      *
      * @param consumer the consumer to apply to the success
-     * @return a Result containing either a void success or the current failure
-     * @throws NullPointerException when provided mapper is null
+     * @return a VoidResult containing either a void success or the current failure
+     * @throws NullPointerException when provided consumer is null
      */
     VoidResult<F> map(Consumer<? super S> consumer);
 

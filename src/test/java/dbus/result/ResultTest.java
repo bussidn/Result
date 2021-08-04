@@ -129,7 +129,7 @@ class ResultTest {
     }
 
     @Nested
-    @DisplayName("map should")
+    @DisplayName("map functions")
     @TestInstance(PER_CLASS)
     class Functor {
 

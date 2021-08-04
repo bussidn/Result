@@ -1,6 +1,8 @@
 package dbus.result.void_;
 
+import dbus.result.Result;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -8,6 +10,7 @@ import java.util.function.Supplier;
 import static java.util.Objects.requireNonNull;
 
 @EqualsAndHashCode
+@ToString
 final public class Failure<F> implements VoidResult<F> {
 
     private final F value;
@@ -24,6 +27,12 @@ final public class Failure<F> implements VoidResult<F> {
     public <R> R match(Supplier<? extends R> success, Function<? super Failure<F>, ? extends R> failure) {
         requireNonNull(success);
         return failure.apply(this);
+    }
+
+    @Override
+    public <S> Result<S, F> map(Supplier<? extends S> supplier) {
+        requireNonNull(supplier);
+        return Result.failure(value);
     }
 
 }

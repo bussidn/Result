@@ -1,6 +1,8 @@
 package dbus.result.void_;
 
+import dbus.result.Result;
 import nl.jqno.equalsverifier.EqualsVerifier;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -106,6 +108,50 @@ class VoidResultTest {
 
         Stream<Arguments> successAndFailure() {
             return VoidResultTest.successAndFailure();
+        }
+    }
+
+    @Nested
+    @DisplayName("map functions")
+    @TestInstance(PER_CLASS)
+    class Functor {
+
+        @ParameterizedTest(name = "map (Supplier) should not accept null parameter when result is {0}")
+        @MethodSource("successAndFailure")
+        public void map_supplier_should_not_accept_null_parameter(VoidResult<String> result) {
+            assertThrows(NullPointerException.class, () ->
+                    result.map(null)
+            );
+        }
+
+        Stream<Arguments> successAndFailure() {
+            return VoidResultTest.successAndFailure();
+        }
+
+        @Test
+        @DisplayName("map (Supplier) should execute supplier when result is a success")
+        public void map_function_should_apply_mapper_when_result_is_a_success() {
+            // given
+            VoidResult<Integer> success = success();
+
+            // when
+            Result<String, Integer> mapped = success.map(() -> "mapped !");
+
+            // then
+            assertThat(mapped).isEqualTo(Result.success("mapped !"));
+        }
+
+        @Test
+        @DisplayName("map (Supplier) should return current failure when result is a failure")
+        public void map_function_should_return_current_failure_when_result_is_a_failure() {
+            // given
+            VoidResult<Integer> failure = failure(23);
+
+            // when
+            Result<String, Integer> mapped = failure.map(() -> fail("should not be executed"));
+
+            // then
+            assertThat(mapped).isEqualTo(Result.failure(23));
         }
     }
 
