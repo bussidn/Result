@@ -33,6 +33,18 @@ public interface VoidResult<F> {
     }
 
     /**
+     * Narrow the scope of failure type to a supertype of the provided void result.
+     *
+     * @param voidResult the result that must be narrows
+     * @param <F> the desired failure type
+     * @return a narrowed result
+     * @throws NullPointerException if provided result is null
+     */
+    static <F> VoidResult<F> narrow(VoidResult<? extends F> voidResult) {
+        return voidResult.match(VoidResult::success, VoidResult::failure);
+    }
+
+    /**
      * Pattern matching emulation on VoidResult subtypes.
      * <p>
      * Indented to be used to provide the two desired behavior in case of success or failure.

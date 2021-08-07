@@ -46,13 +46,26 @@ public interface Result<S, F> {
     }
 
     /**
+     * Narrow the scope of success and failure types to a supertype of the provided result.
+     *
+     * @param result the result that must be narrows
+     * @param <S> the desired success type
+     * @param <F> the desired failure type
+     * @return a narrowed result
+     * @throws NullPointerException if provided result is null
+     */
+    static <S, F> Result<S, F> narrow(Result<? extends S, ? extends F> result) {
+        return result.match(Result::success, Result::failure);
+    }
+
+    /**
      * Pattern matching emulation on Result deconstructed subtypes.
      * <p>
      * Indented to be used to provide the two desired behavior in case of success or failure.
      *
      * @param success the desired behavior in case of success.
      * @param failure the desired behavior in cas of failure
-     * @param <R> the new type
+     * @param <R>     the new type
      * @return a value of the new type provided by one of the two provided functions
      * @throws NullPointerException if any of its arguments is null
      */

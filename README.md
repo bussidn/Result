@@ -21,12 +21,16 @@ This library intend to provide most of composition-generic-methods to easily com
 - Result as a Success | Failure union type
 - VoidResult
 - Map function
+- Function Level (ResultFunction / VoidResultFunction) 
+  - conversion methods
 
 ### ToDo
 
 - Function Level (ResultFunction / VoidResultFunction)
+  - map methods
 - bind methods
 - structure helpers (from boolean & predicate)
 - fail / recover methods
 - aggregation methods
 - Results (aggregation, reducing strategy, collect)
+- transformation methods (Stream, Optional)

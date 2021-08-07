@@ -129,6 +129,48 @@ class ResultTest {
     }
 
     @Nested
+    @DisplayName("covariance")
+    @TestInstance(PER_CLASS)
+    class Covariance {
+
+        @Test
+        public void narrow_should_not_accept_null_result_input() {
+            //noinspection ConstantConditions
+            assertThrows(NullPointerException.class, () ->
+                    Result.<String, String>narrow(null)
+            );
+        }
+
+        @ParameterizedTest(name = "narrow should return an equal narrowed result when result input is not null")
+        @MethodSource("subTypeResults")
+        public void narrow_should_return_an_equal_narrowed_result_when_input_is_not_null(Result<?, ? extends Number> result) {
+            // when
+            Result<Object, Number> narrowed = Result.narrow(result);
+
+            // then
+            assertThat(narrowed).isEqualTo(result);
+
+        }
+
+        Stream<Arguments> subTypeResults() {
+            return ResultTest.subTypeResults();
+        }
+    }
+
+    static Stream<Arguments> subTypeResults() {
+        return Stream.of(
+                Arguments.of(Result.<Object, Number>success(new Object())),
+                Arguments.of(Result.<Object, Number>failure(12)),
+                Arguments.of(Result.<Object, Float>success("Object")),
+                Arguments.of(Result.failure(14.2f)),
+                Arguments.of(Result.<String, Number>success("Success")),
+                Arguments.of(Result.<String, Number>failure(14546765L)),
+                Arguments.of(Result.<String, Integer>success("not an integer")),
+                Arguments.of(Result.<String, Integer>failure(42))
+        );
+    }
+
+    @Nested
     @DisplayName("map functions")
     @TestInstance(PER_CLASS)
     class Functor {
@@ -184,7 +226,8 @@ class ResultTest {
         public void map_consumer_should_apply_consumer_when_result_is_a_success() {
             // given
             Result<String, Integer> success = success("Hello");
-            Consumer<String> spiedConsumer = spyLambda(s -> {}, Consumer.class);
+            Consumer<String> spiedConsumer = spyLambda(s -> {
+            }, Consumer.class);
 
             // when
             VoidResult<Integer> mapped = success.map(spiedConsumer);
@@ -199,7 +242,8 @@ class ResultTest {
         public void map_consumer_should_return_current_failure_when_result_is_a_failure() {
             // given
             Result<String, Integer> failure = failure(17);
-            Consumer<String> spiedConsumer = spyLambda(s -> {}, Consumer.class);
+            Consumer<String> spiedConsumer = spyLambda(s -> {
+            }, Consumer.class);
 
             // when
             VoidResult<Integer> mapped = failure.map(spiedConsumer);

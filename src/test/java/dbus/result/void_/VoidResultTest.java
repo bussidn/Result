@@ -112,6 +112,46 @@ class VoidResultTest {
     }
 
     @Nested
+    @DisplayName("covariance")
+    @TestInstance(PER_CLASS)
+    class Covariance {
+
+        @Test
+        public void narrow_should_not_accept_null_void_result_input() {
+            //noinspection ConstantConditions
+            assertThrows(NullPointerException.class, () ->
+                    VoidResult.<String>narrow(null)
+            );
+        }
+
+        @ParameterizedTest(name = "narrow should return an equal narrowed void result when void result input is not null")
+        @MethodSource("subTypeResults")
+        public void narrow_should_return_an_equal_narrowed_result_when_input_is_not_null(VoidResult<?> voidResult) {
+            // when
+            VoidResult<Object> narrowed = VoidResult.narrow(voidResult);
+
+            // then
+            assertThat(narrowed).isEqualTo(voidResult);
+
+        }
+
+        Stream<Arguments> subTypeResults() {
+            return VoidResultTest.subTypeResults();
+        }
+    }
+
+    static Stream<Arguments> subTypeResults() {
+        return Stream.of(
+                Arguments.of(VoidResult.<Number>success()),
+                Arguments.of(VoidResult.<Number>failure(12)),
+                Arguments.of(VoidResult.<Long>success()),
+                Arguments.of(VoidResult.failure(14546765L)),
+                Arguments.of(VoidResult.<String>success()),
+                Arguments.of(VoidResult.failure("failure"))
+        );
+    }
+
+    @Nested
     @DisplayName("map functions")
     @TestInstance(PER_CLASS)
     class Functor {
