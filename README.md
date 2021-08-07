@@ -13,3 +13,20 @@ Result is an alternative to these that make it clear and sound that a method can
 
 The main drawback is that a bit of work will be necessary at failure typing level
 This library intend to provide most of composition-generic-methods to easily compose your failure methods in the most common situations
+
+## Quick Roadmap
+
+### Done
+
+- Result as a Success | Failure union type
+- VoidResult
+- Map function
+
+### ToDo
+
+- Function Level (ResultFunction / VoidResultFunction)
+- bind methods
+- structure helpers (from boolean & predicate)
+- fail / recover methods
+- aggregation methods
+- Results (aggregation, reducing strategy, collect)
