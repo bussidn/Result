@@ -75,7 +75,7 @@ public interface Result<S, F> {
     );
 
     /**
-     * Map function for Result functor.
+     * Result functor map function.
      * <p>
      * It applies the provided mapper to the success value if this is a success.
      * Returns the current failure otherwise.
@@ -88,7 +88,7 @@ public interface Result<S, F> {
     <R> Result<R, F> map(Function<? super S, ? extends R> mapper);
 
     /**
-     * bridge function for Result functor to VoidResult.
+     * bridge function from Result functor to VoidResult.
      * <p>
      * It applies the provided consumer to the success value if this is a success.
      * Returns the current failure otherwise as a VoidResult.Failure.

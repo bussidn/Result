@@ -61,6 +61,17 @@ public interface VoidResult<F> {
     );
 
     /**
+     * <p>
+     * It executes the provided runnable if this is a success.
+     * Returns the current failure otherwise.
+     *
+     * @param runnable the runnable to execute in case of success
+     * @return a {@link VoidResult} containing either a success or the current failure
+     * @throws NullPointerException when provided supplier is null
+     */
+    VoidResult<F> map(Runnable runnable);
+
+    /**
      * bridge function for VoidResult functor to Result.
      * <p>
      * It executes the provided supplier if this is a success.

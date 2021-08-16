@@ -33,6 +33,13 @@ final public class Success<F> implements VoidResult<F> {
     }
 
     @Override
+    public VoidResult<F> map(Runnable runnable) {
+        requireNonNull(runnable);
+        runnable.run();
+        return this;
+    }
+
+    @Override
     public <S> Result<S, F> map(Supplier<? extends S> supplier) {
         return Result.success(supplier.get());
     }

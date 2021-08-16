@@ -10,14 +10,18 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static dbus.result.MockitoLambdaSpying.spiedRunnable;
 import static dbus.result.void_.VoidResult.failure;
 import static dbus.result.void_.VoidResult.success;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 class VoidResultTest {
 
@@ -156,11 +160,74 @@ class VoidResultTest {
     @TestInstance(PER_CLASS)
     class Functor {
 
+        @ParameterizedTest(name = "map (Runnable) should not accept null parameter when result is {0}")
+        @MethodSource("successAndFailure")
+        public void map_runnable_should_not_accept_null_parameter(VoidResult<String> result) {
+            assertThrows(NullPointerException.class, () ->
+                    result.map((Runnable) null)
+            );
+        }
+
+        @Test
+        @DisplayName("map (Runnable) should execute runnable when result is a success")
+        public void map_runnable_should_execute_runnable_when_result_is_a_success() {
+            // given
+            VoidResult<Integer> success = success();
+            Runnable runnable = spiedRunnable();
+
+            // when
+            success.map(runnable);
+
+            // then
+            verify(runnable).run();
+        }
+
+        @Test
+        @DisplayName("map (Runnable) should not execute runnable when result is a failure")
+        public void map_runnable_should_not_execute_runnable_when_result_is_a_failure() {
+            // given
+            VoidResult<Integer> success = failure(3);
+            Runnable runnable = spiedRunnable();
+
+            // when
+            success.map(runnable);
+
+            // then
+            verify(runnable, never()).run();
+        }
+
+        @Test
+        @DisplayName("map (Runnable) should return a success when result is a success")
+        public void map_runnable_should_return_a_success_when_result_is_a_success() {
+            // given
+            VoidResult<Integer> success = success();
+            Runnable runnable = spiedRunnable();
+
+            // when
+            VoidResult<Integer> mapped = success.map(runnable);
+
+            // then
+            assertThat(mapped).isEqualTo(success());
+        }
+
+        @Test
+        @DisplayName("map (Runnable) should execute the current failure when result is a failure")
+        public void map_runnable_should_return_the_current_failure_when_result_is_a_failure() {
+            // given
+            VoidResult<Integer> success = failure(3);
+
+            // when
+            VoidResult<Integer> mapped = success.map(() -> {});
+
+            // then
+            assertThat(mapped).isEqualTo(failure(3));
+        }
+
         @ParameterizedTest(name = "map (Supplier) should not accept null parameter when result is {0}")
         @MethodSource("successAndFailure")
         public void map_supplier_should_not_accept_null_parameter(VoidResult<String> result) {
             assertThrows(NullPointerException.class, () ->
-                    result.map(null)
+                    result.map((Supplier<String>) null)
             );
         }
 

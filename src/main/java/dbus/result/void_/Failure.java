@@ -30,6 +30,12 @@ final public class Failure<F> implements VoidResult<F> {
     }
 
     @Override
+    public VoidResult<F> map(Runnable runnable) {
+        requireNonNull(runnable);
+        return this;
+    }
+
+    @Override
     public <S> Result<S, F> map(Supplier<? extends S> supplier) {
         requireNonNull(supplier);
         return Result.failure(value);
