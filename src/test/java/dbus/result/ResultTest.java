@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static dbus.result.MockitoLambdaSpying.spiedFunction;
 import static dbus.result.MockitoLambdaSpying.spyLambda;
 import static dbus.result.Result.failure;
 import static dbus.result.Result.success;
@@ -23,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -252,6 +254,79 @@ class ResultTest {
             assertThat(mapped).isEqualTo(VoidResult.failure(17));
             verify(spiedConsumer, never()).accept("Hello");
         }
+    }
+
+    @Nested
+    @TestInstance(PER_CLASS)
+    class Monad {
+
+        @ParameterizedTest(name = "flaMap should not accept null parameter when result is {0}")
+        @MethodSource("successAndFailure")
+        public void flatMap_function_should_not_accept_null_parameter(Result<String, String> result) {
+            assertThrows(NullPointerException.class, () ->
+                    result.flatMap((Function<String, Result<Integer, String>>) null)
+            );
+        }
+        
+        @ParameterizedTest(name = "flatMap should apply the provided bound function when initial result is a success")
+        @MethodSource("bound")
+        public void flatMap_should_apply_the_provided_bound_function_when_initial_result_is_a_success(
+                String initialSuccessValue,
+                ResultFunction<String, Integer, String> boundFunction,
+                Result<Integer, String> expectedResult
+        ) {
+            // given
+            Result<String, String> success = Result.success(initialSuccessValue);
+            
+            // when
+            Result<Integer, String> flatMappedResult = success.flatMap(boundFunction);
+            
+            // then
+            assertThat(flatMappedResult).isEqualTo(expectedResult);
+        }
+
+        @Test
+        public void flatMap_should_return_the_initial_failure_when_initial_result_is_a_failure() {
+            // given
+            Result<String, String> failure = Result.failure("already failed");
+            Function<String, Result<Integer, String>> should_not_be_executed = s -> failure("should not be executed");
+
+            // when
+            Result<Integer, String> flatMappedResult = failure.flatMap(should_not_be_executed);
+
+            // then
+            assertThat(flatMappedResult).isEqualTo(Result.failure("already failed"));
+        }
+
+        @Test
+        public void flatMap_should_not_execute_provided_bound_function_when_initial_result_is_a_failure() {
+            // given
+            Result<String, String> failure = Result.failure("already failed");
+            Function<String, Result<Integer, String>> should_not_be_executed = spiedFunction(s -> failure("should not be executed"));
+
+            // when
+            failure.flatMap(should_not_be_executed);
+
+            // then
+            verify(should_not_be_executed, never()).apply(any());
+        }
+        
+        Stream<Arguments> bound() {
+            return Stream.of(
+                    Arguments.of("initial success", 
+                            (ResultFunction<String, Integer, String>) (String s) -> Result.success(s.length()), 
+                            Result.success(15)
+                    ),
+                    Arguments.of("does not matter",
+                            (ResultFunction<String, Integer, String>) (String s) -> Result.failure("because"),
+                            Result.failure("because"))
+            );
+        }
+
+        Stream<Arguments> successAndFailure() {
+            return ResultTest.successAndFailure();
+        }
+
     }
 
     private VerificationMode once() {

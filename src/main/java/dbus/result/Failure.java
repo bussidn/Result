@@ -48,4 +48,10 @@ final class Failure<S, F> implements Result<S, F> {
         requireNonNull(consumer);
         return VoidResult.failure(value);
     }
+
+    @Override
+    public <R> Result<R, F> flatMap(Function<? super S, ? extends Result<? extends R, ? extends F>> bound) {
+        requireNonNull(bound);
+        return this.cast();
+    }
 }

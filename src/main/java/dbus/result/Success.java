@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static dbus.result.Result.narrow;
 import static java.util.Objects.requireNonNull;
 
 @EqualsAndHashCode
@@ -43,5 +44,11 @@ final class Success<S, F> implements Result<S, F> {
     public VoidResult<F> map(Consumer<? super S> consumer) {
         consumer.accept(value);
         return VoidResult.success();
+    }
+
+    @Override
+    public <R> Result<R, F> flatMap(Function<? super S, ? extends Result<? extends R, ? extends F>> bound) {
+        requireNonNull(bound);
+        return narrow(bound.apply(value));
     }
 }

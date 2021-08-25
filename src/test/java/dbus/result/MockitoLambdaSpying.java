@@ -1,5 +1,6 @@
 package dbus.result;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.mockito.AdditionalAnswers.delegatesTo;
@@ -27,5 +28,12 @@ public class MockitoLambdaSpying {
      */
     public static <R> Supplier<R> spiedSupplier(Supplier<R> lambda) {
          return spyLambda(lambda, Supplier.class);
+     }
+
+     /**
+     * specialisation of {@link MockitoLambdaSpying#spyLambda(Object, Class)} for {@link Function}
+     */
+    public static <T, R> Function<T, R> spiedFunction(Function<T, R> lambda) {
+         return spyLambda(lambda, Function.class);
      }
 }

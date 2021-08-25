@@ -49,8 +49,8 @@ public interface Result<S, F> {
      * Narrow the scope of success and failure types to a supertype of the provided result.
      *
      * @param result the result that must be narrows
-     * @param <S> the desired success type
-     * @param <F> the desired failure type
+     * @param <S>    the desired success type
+     * @param <F>    the desired failure type
      * @return a narrowed result
      * @throws NullPointerException if provided result is null
      */
@@ -99,4 +99,17 @@ public interface Result<S, F> {
      */
     VoidResult<F> map(Consumer<? super S> consumer);
 
+    /**
+     * Result monad bind function
+     * <p>
+     * compose the provided bound function to the current success if any.
+     * If current state is a failure, the provided bound function is not called.
+     *
+     * @param bound the function to compose current result with
+     * @param <R>   the new success type
+     * @return  a result containing either the R success value if current and bound function result are successes,
+     *          a F-typed otherwise.
+     * @throws NullPointerException if provided bound parameter is null
+     */
+    <R> Result<R, F> flatMap(Function<? super S, ? extends Result<? extends R, ? extends F>> bound);
 }
