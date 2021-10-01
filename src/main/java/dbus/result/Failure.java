@@ -6,6 +6,7 @@ import lombok.ToString;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 
@@ -51,6 +52,12 @@ final class Failure<S, F> implements Result<S, F> {
 
     @Override
     public <R> Result<R, F> flatMap(Function<? super S, ? extends Result<? extends R, ? extends F>> bound) {
+        requireNonNull(bound);
+        return this.cast();
+    }
+
+    @Override
+    public <R> Result<R, F> flatMap(Supplier<? extends Result<? extends R, ? extends F>> bound) {
         requireNonNull(bound);
         return this.cast();
     }

@@ -7,6 +7,7 @@ import lombok.ToString;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static dbus.result.Result.narrow;
 import static java.util.Objects.requireNonNull;
@@ -50,5 +51,11 @@ final class Success<S, F> implements Result<S, F> {
     public <R> Result<R, F> flatMap(Function<? super S, ? extends Result<? extends R, ? extends F>> bound) {
         requireNonNull(bound);
         return narrow(bound.apply(value));
+    }
+
+    @Override
+    public <R> Result<R, F> flatMap(Supplier<? extends Result<? extends R, ? extends F>> bound) {
+        requireNonNull(bound);
+        return narrow(bound.get());
     }
 }

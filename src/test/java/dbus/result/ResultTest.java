@@ -14,10 +14,10 @@ import org.mockito.verification.VerificationMode;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static dbus.result.MockitoLambdaSpying.spiedFunction;
-import static dbus.result.MockitoLambdaSpying.spyLambda;
+import static dbus.result.MockitoLambdaSpying.*;
 import static dbus.result.Result.failure;
 import static dbus.result.Result.success;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -260,7 +260,7 @@ class ResultTest {
     @TestInstance(PER_CLASS)
     class Monad {
 
-        @ParameterizedTest(name = "flaMap should not accept null parameter when result is {0}")
+        @ParameterizedTest(name = "flaMap (function) should not accept null parameter when result is {0}")
         @MethodSource("successAndFailure")
         public void flatMap_function_should_not_accept_null_parameter(Result<String, String> result) {
             assertThrows(NullPointerException.class, () ->
@@ -268,9 +268,9 @@ class ResultTest {
             );
         }
         
-        @ParameterizedTest(name = "flatMap should apply the provided bound function when initial result is a success")
-        @MethodSource("bound")
-        public void flatMap_should_apply_the_provided_bound_function_when_initial_result_is_a_success(
+        @ParameterizedTest(name = "flatMap (function) should apply the provided bound function when initial result is a success")
+        @MethodSource("boundFunction")
+        public void flatMap_function_should_apply_the_provided_bound_function_when_initial_result_is_a_success(
                 String initialSuccessValue,
                 ResultFunction<String, Integer, String> boundFunction,
                 Result<Integer, String> expectedResult
@@ -286,7 +286,7 @@ class ResultTest {
         }
 
         @Test
-        public void flatMap_should_return_the_initial_failure_when_initial_result_is_a_failure() {
+        public void flatMap_function_should_return_the_initial_failure_when_initial_result_is_a_failure() {
             // given
             Result<String, String> failure = Result.failure("already failed");
             Function<String, Result<Integer, String>> should_not_be_executed = s -> failure("should not be executed");
@@ -299,7 +299,7 @@ class ResultTest {
         }
 
         @Test
-        public void flatMap_should_not_execute_provided_bound_function_when_initial_result_is_a_failure() {
+        public void flatMap_function_should_not_execute_provided_bound_function_when_initial_result_is_a_failure() {
             // given
             Result<String, String> failure = Result.failure("already failed");
             Function<String, Result<Integer, String>> should_not_be_executed = spiedFunction(s -> failure("should not be executed"));
@@ -310,8 +310,59 @@ class ResultTest {
             // then
             verify(should_not_be_executed, never()).apply(any());
         }
+
+        @ParameterizedTest(name = "flaMap (supplier) should not accept null parameter when result is {0}")
+        @MethodSource("successAndFailure")
+        public void flatMap_supplier_should_not_accept_null_parameter(Result<String, String> result) {
+            assertThrows(NullPointerException.class, () ->
+                    result.flatMap((Supplier<Result<Integer, String>>) null)
+            );
+        }
+
+        @ParameterizedTest(name = "flatMap (supplier) should apply the provided bound supplier when initial result is a success")
+        @MethodSource("boundSupplier")
+        public void flatMap_supplier_should_apply_the_provided_bound_supplier_when_initial_result_is_a_success(
+                String initialSuccessValue,
+                Supplier<Result<Integer, String>> boundSupplier,
+                Result<Integer, String> expectedResult
+        ) {
+            // given
+            Result<String, String> success = Result.success(initialSuccessValue);
+
+            // when
+            Result<Integer, String> flatMappedResult = success.flatMap(boundSupplier);
+
+            // then
+            assertThat(flatMappedResult).isEqualTo(expectedResult);
+        }
+
+        @Test
+        public void flatMap_supplier_should_return_the_initial_failure_when_initial_result_is_a_failure() {
+            // given
+            Result<String, String> failure = Result.failure("already failed");
+            Supplier<Result<Integer, String>> should_not_be_executed = () -> failure("should not be executed");
+
+            // when
+            Result<Integer, String> flatMappedResult = failure.flatMap(should_not_be_executed);
+
+            // then
+            assertThat(flatMappedResult).isEqualTo(Result.failure("already failed"));
+        }
+
+        @Test
+        public void flatMap_supplier_should_not_execute_provided_bound_supplier_when_initial_result_is_a_failure() {
+            // given
+            Result<String, String> failure = Result.failure("already failed");
+            Supplier<Result<Integer, String>> should_not_be_executed = spiedSupplier(() -> failure("should not be executed"));
+
+            // when
+            failure.flatMap(should_not_be_executed);
+
+            // then
+            verify(should_not_be_executed, never()).get();
+        }
         
-        Stream<Arguments> bound() {
+        Stream<Arguments> boundFunction() {
             return Stream.of(
                     Arguments.of("initial success", 
                             (ResultFunction<String, Integer, String>) (String s) -> Result.success(s.length()), 
@@ -319,6 +370,18 @@ class ResultTest {
                     ),
                     Arguments.of("does not matter",
                             (ResultFunction<String, Integer, String>) (String s) -> Result.failure("because"),
+                            Result.failure("because"))
+            );
+        }
+
+        Stream<Arguments> boundSupplier() {
+            return Stream.of(
+                    Arguments.of("initial success",
+                            (Supplier<Result<Integer, String>>) () -> Result.success(12),
+                            Result.success(12)
+                    ),
+                    Arguments.of("does not matter",
+                            (Supplier<Result<Integer, String>>) () -> Result.failure("because"),
                             Result.failure("because"))
             );
         }

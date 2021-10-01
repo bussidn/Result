@@ -26,11 +26,11 @@ This library intend to provide most of composition-generic-methods to easily com
   - map methods
 - bind methods
   - on Result (Function)
+  - on Result (Supplier)
   
 ### ToDo
 
 - bind methods
-  - on Result (Supplier)
   - on VoidResult
   - on ResultFunction
   - on VoidResultFunction

@@ -4,6 +4,7 @@ import dbus.result.void_.VoidResult;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Class representing either a success or a failure.
@@ -108,8 +109,22 @@ public interface Result<S, F> {
      * @param bound the function to compose current result with
      * @param <R>   the new success type
      * @return  a result containing either the R success value if current and bound function result are successes,
-     *          a F-typed otherwise.
+     *          a F-typed failure otherwise.
      * @throws NullPointerException if provided bound parameter is null
      */
     <R> Result<R, F> flatMap(Function<? super S, ? extends Result<? extends R, ? extends F>> bound);
+
+    /**
+     * Result monad bind function but with a function that does not need the present success state.
+     * <p>
+     * compose the provided bound supplier to the current success if any, discarding its value.
+     * If current state is a failure, the provided bound function is not called.
+     *
+     * @param bound the supplier to compose current result with
+     * @param <R>   the new success type
+     * @return  a result containing either the R success value if current and bound function result are successes,
+     *          a F-typed failure otherwise.
+     * @throws NullPointerException if provided bound parameter is null
+     */
+    <R> Result<R, F> flatMap(Supplier<? extends Result<? extends R, ? extends F>> bound);
 }
