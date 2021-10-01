@@ -34,6 +34,7 @@ This library intend to provide most of composition-generic-methods to easily com
   - on VoidResult
   - on ResultFunction
   - on VoidResultFunction
+- recover/tryRecovering
 - structure helpers (from boolean & predicate)
 - fail / recover methods
 - aggregation methods
