@@ -25,15 +25,14 @@ This library intend to provide most of composition-generic-methods to easily com
   - conversion methods
   - map methods
 - bind methods
-  - on Result (Function)
-  - on Result (Supplier)
+  - on Result (Function, Supplier)
+  - on VoidResult (Supplier)
   
 ### ToDo
 
 - bind methods
-  - on VoidResult
-  - on ResultFunction
-  - on VoidResultFunction
+  - on ResultFunction (Function, Supplier)
+  - on VoidResultFunction (Supplier)
 - recover/tryRecovering
 - structure helpers (from boolean & predicate)
 - fail / recover methods

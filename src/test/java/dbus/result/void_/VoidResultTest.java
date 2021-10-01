@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static dbus.result.MockitoLambdaSpying.spiedRunnable;
+import static dbus.result.MockitoLambdaSpying.spiedSupplier;
 import static dbus.result.void_.VoidResult.failure;
 import static dbus.result.void_.VoidResult.success;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -217,7 +218,8 @@ class VoidResultTest {
             VoidResult<Integer> success = failure(3);
 
             // when
-            VoidResult<Integer> mapped = success.map(() -> {});
+            VoidResult<Integer> mapped = success.map(() -> {
+            });
 
             // then
             assertThat(mapped).isEqualTo(failure(3));
@@ -260,6 +262,79 @@ class VoidResultTest {
             // then
             assertThat(mapped).isEqualTo(Result.failure(23));
         }
+    }
+
+    @Nested
+    @TestInstance(PER_CLASS)
+    class Monad {
+
+        @ParameterizedTest(name = "flaMap should not accept null parameter when result is {0}")
+        @MethodSource("successAndFailure")
+        public void flatMap_supplier_should_not_accept_null_parameter(VoidResult<String> result) {
+            assertThrows(NullPointerException.class, () ->
+                    result.flatMap((Supplier<Result<Integer, String>>) null)
+            );
+        }
+
+        @ParameterizedTest(name = "flatMap should apply the provided bound supplier when initial result is a success")
+        @MethodSource("boundSupplier")
+        public void flatMap_should_apply_the_provided_bound_supplier_when_initial_result_is_a_success(
+                Supplier<Result<Integer, String>> boundSupplier,
+                Result<Integer, String> expectedResult
+        ) {
+            // given
+            VoidResult<String> success = VoidResult.success();
+
+            // when
+            Result<Integer, String> flatMappedResult = success.flatMap(boundSupplier);
+
+            // then
+            assertThat(flatMappedResult).isEqualTo(expectedResult);
+        }
+
+        @Test
+        public void flatMap_should_return_the_initial_failure_when_initial_result_is_a_failure() {
+            // given
+            VoidResult<String> failure = VoidResult.failure("already failed");
+            Supplier<Result<Integer, String>> should_not_be_executed = () -> Result.failure("should not be executed");
+
+            // when
+            Result<Integer, String> flatMappedResult = failure.flatMap(should_not_be_executed);
+
+            // then
+            assertThat(flatMappedResult).isEqualTo(Result.failure("already failed"));
+        }
+
+        @Test
+        public void flatMap_should_not_execute_provided_bound_supplier_when_initial_result_is_a_failure() {
+            // given
+            VoidResult<String> failure = VoidResult.failure("already failed");
+            Supplier<Result<Integer, String>> should_not_be_executed = spiedSupplier(() -> Result.failure("should not be executed"));
+
+            // when
+            failure.flatMap(should_not_be_executed);
+
+            // then
+            verify(should_not_be_executed, never()).get();
+        }
+
+        Stream<Arguments> boundSupplier() {
+            return Stream.of(
+                    Arguments.of(
+                            (Supplier<Result<Integer, String>>) () -> Result.success(12),
+                            Result.success(12)
+                    ),
+                    Arguments.of(
+                            (Supplier<Result<Integer, String>>) () -> Result.failure("because"),
+                            Result.failure("because")
+                    )
+            );
+        }
+
+        Stream<Arguments> successAndFailure() {
+            return VoidResultTest.successAndFailure();
+        }
+
     }
 
     static Stream<Arguments> successAndFailure() {

@@ -12,6 +12,7 @@ import static java.util.Objects.requireNonNull;
 @EqualsAndHashCode
 @ToString
 final public class Success<F> implements VoidResult<F> {
+
     private static final Success<?> SUCCESS = new Success<>();
 
     private Success() {
@@ -42,6 +43,12 @@ final public class Success<F> implements VoidResult<F> {
     @Override
     public <S> Result<S, F> map(Supplier<? extends S> supplier) {
         return Result.success(supplier.get());
+    }
+
+    @Override
+    public <R> Result<R, F> flatMap(Supplier<? extends Result<? extends R, ? extends F>> bound) {
+        requireNonNull(bound);
+        return Result.narrow(bound.get());
     }
 
 }
