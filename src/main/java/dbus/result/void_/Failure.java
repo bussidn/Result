@@ -42,7 +42,13 @@ final public class Failure<F> implements VoidResult<F> {
     }
 
     @Override
-    public <R> Result<R, F> flatMap(Supplier<? extends Result<? extends R, ? extends F>> bound) {
+    public VoidResult<F> flatMap(Supplier<? extends VoidResult<? extends F>> bound) {
+        requireNonNull(bound);
+        return this;
+    }
+
+    @Override
+    public <R> Result<R, F> flatMapToResult(Supplier<? extends Result<? extends R, ? extends F>> bound) {
         requireNonNull(bound);
         return Result.failure(value);
     }

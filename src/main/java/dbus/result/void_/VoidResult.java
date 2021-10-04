@@ -84,6 +84,19 @@ public interface VoidResult<F> {
     <S> Result<S, F> map(Supplier<? extends S> supplier);
 
     /**
+     * VoidResult monad bind function
+     * <p>
+     * compose the provided bound supplier to the current success if any.
+     * If current state is a failure, the provided bound function is not called.
+     *
+     * @param bound the supplier to compose current result with
+     * @return  a void result containing either the success if current and bound supplied result are successes,
+     *          a F-typed failure otherwise.
+     * @throws NullPointerException if provided bound parameter is null
+     */
+    VoidResult<F> flatMap(Supplier<? extends VoidResult<? extends F>> bound);
+
+    /**
      * Result monad bind function but with a function that does not need the present success state.
      * <p>
      * compose the provided bound supplier to the current success if any.
@@ -95,5 +108,5 @@ public interface VoidResult<F> {
      *          a F-typed failure otherwise.
      * @throws NullPointerException if provided bound parameter is null
      */
-    <R> Result<R, F> flatMap(Supplier<? extends Result<? extends R, ? extends F>> bound);
+    <R> Result<R, F> flatMapToResult(Supplier<? extends Result<? extends R, ? extends F>> bound);
 }
