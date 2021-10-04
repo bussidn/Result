@@ -26,13 +26,20 @@ This library intend to provide most of composition-generic-methods to easily com
   - map methods
 - bind methods
   - on Result (Function, Supplier)
-  - on VoidResult (Supplier)
+  - on ResultFunction (Function, Supplier)
+- bind & bridge functions
+  - on VoidResult flatMapToResult
   
 ### ToDo
 
 - bind methods
-  - on ResultFunction (Function, Supplier)
+  - on VoidResult (Supplier)
   - on VoidResultFunction (Supplier)
+- bind & bridge functions
+  - on Result flatMapToVoid
+  - on VoidResult flatMapToResult (named flatMap for now)
+  - on ResultFunction flatMapToVoid
+  - on VoidResultFunction flatMapToResult
 - recover/tryRecovering
 - structure helpers (from boolean & predicate)
 - fail / recover methods

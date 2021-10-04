@@ -4,6 +4,7 @@ import dbus.result.void_.VoidResultFunction;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 
@@ -62,6 +63,38 @@ public interface ResultFunction<T, S, F> extends Function<T, Result<S, F>> {
     default VoidResultFunction<T, F> map(Consumer<? super S> consumer) {
         requireNonNull(consumer);
         return t -> this.apply(t).map(consumer);
+    }
+
+    /**
+     * Result monad bind function applied to a function
+     * <p>
+     * compose the provided bound function to the current result function.
+     *
+     * @param bound the function to compose current function with
+     * @param <R>   the new success type
+     * @return  a result function composing this with the bound function.
+     * @throws NullPointerException if provided bound parameter is null
+     */
+    default <R> ResultFunction<T, R, F> flatMap(Function<? super S, ? extends Result<? extends R, ? extends F>> bound) {
+        requireNonNull(bound);
+        return t -> this.apply(t).flatMap(bound);
+    }
+
+    /**
+     * Result monad bind function but with a function that does not need the present success state.
+     * <p>
+     * compose the provided bound supplier to the current success if any, discarding its value.
+     * If current state is a failure, the provided bound function is not called.
+     *
+     * @param bound the supplier to compose current result with
+     * @param <R>   the new success type
+     * @return  a result containing either the R success value if current and bound function result are successes,
+     *          a F-typed failure otherwise.
+     * @throws NullPointerException if provided bound parameter is null
+     */
+    default <R> ResultFunction<T, R, F> flatMap(Supplier<? extends Result<? extends R, ? extends F>> bound) {
+        requireNonNull(bound);
+        return t -> this.apply(t).flatMap(bound);
     }
 
 }
