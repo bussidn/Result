@@ -28,13 +28,12 @@ This library intend to provide most of composition-generic-methods to easily com
   - on Result (Function, Supplier)
   - on VoidResult (Supplier)
   - on ResultFunction (Function, Supplier)
+  - on VoidResultFunction (Supplier)
 - bind & bridge functions
   - on VoidResult flatMapToResult
   
 ### ToDo
 
-- bind methods
-  - on VoidResultFunction (Supplier)
 - bind & bridge functions
   - on Result flatMapToVoid
   - on ResultFunction flatMapToVoid

@@ -56,4 +56,21 @@ public interface VoidResultFunction<T, F> extends Function<T, VoidResult<F>> {
         requireNonNull(supplier);
         return t -> this.apply(t).map(supplier);
     }
+
+    /**
+     * compose the current {@link VoidResultFunction} with a void result supplier
+     * <p>
+     * It applies the provided supplier after this if the result is a success.
+     * Returns the current failure otherwise.
+     * <p>
+     *
+     * @param bound the runnable to apply after this
+     * @return a {@link VoidResultFunction} composing this and the runnable
+     * @throws NullPointerException when provided mapper is null
+     * @see VoidResult#map(Runnable)
+     */
+    default VoidResultFunction<T, F> flatMap(Supplier<? extends VoidResult<F>> bound) {
+        requireNonNull(bound);
+        return t -> this.apply(t).flatMap(bound);
+    }
 }
