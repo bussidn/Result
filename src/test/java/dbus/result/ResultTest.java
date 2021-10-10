@@ -1,6 +1,7 @@
 package dbus.result;
 
 import dbus.result.void_.VoidResult;
+import dbus.result.void_.VoidResultFunction;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -267,7 +268,7 @@ class ResultTest {
                     result.flatMap((Function<String, Result<Integer, String>>) null)
             );
         }
-        
+
         @ParameterizedTest(name = "flatMap (function) should apply the provided bound function when initial result is a success")
         @MethodSource("boundFunction")
         public void flatMap_function_should_apply_the_provided_bound_function_when_initial_result_is_a_success(
@@ -277,10 +278,10 @@ class ResultTest {
         ) {
             // given
             Result<String, String> success = Result.success(initialSuccessValue);
-            
+
             // when
             Result<Integer, String> flatMappedResult = success.flatMap(boundFunction);
-            
+
             // then
             assertThat(flatMappedResult).isEqualTo(expectedResult);
         }
@@ -361,11 +362,11 @@ class ResultTest {
             // then
             verify(should_not_be_executed, never()).get();
         }
-        
+
         Stream<Arguments> boundFunction() {
             return Stream.of(
-                    Arguments.of("initial success", 
-                            (ResultFunction<String, Integer, String>) (String s) -> Result.success(s.length()), 
+                    Arguments.of("initial success",
+                            (ResultFunction<String, Integer, String>) (String s) -> Result.success(s.length()),
                             Result.success(15)
                     ),
                     Arguments.of("does not matter",
@@ -390,6 +391,78 @@ class ResultTest {
             return ResultTest.successAndFailure();
         }
 
+
+        @Nested
+        @TestInstance(PER_CLASS)
+        class ToVoidResult {
+
+            @ParameterizedTest(name = "flaMapToVoid (function) should not accept null parameter when result is {0}")
+            @MethodSource("successAndFailure")
+            public void flatMapToVoid_function_should_not_accept_null_parameter(Result<String, String> result) {
+                assertThrows(NullPointerException.class, () ->
+                        result.flatMapToVoid(null)
+                );
+            }
+
+            Stream<Arguments> successAndFailure() {
+                return ResultTest.successAndFailure();
+            }
+
+            @ParameterizedTest(name = "flatMapToVoid (function) should apply the provided bound function when initial result is a success")
+            @MethodSource("boundFunction")
+            public void flatMapToVoid_function_should_apply_the_provided_bound_function_when_initial_result_is_a_success(
+                    String initialSuccessValue,
+                    VoidResultFunction<String, String> boundFunction,
+                    VoidResult<String> expectedResult
+            ) {
+                // given
+                Result<String, String> success = Result.success(initialSuccessValue);
+
+                // when
+                var flatMappedResult = success.flatMapToVoid(boundFunction);
+
+                // then
+                assertThat(flatMappedResult).isEqualTo(expectedResult);
+            }
+
+            Stream<Arguments> boundFunction() {
+                return Stream.of(
+                        Arguments.of("initial success",
+                                (VoidResultFunction<String, Integer>) (String s) -> VoidResult.success(),
+                                VoidResult.success()
+                        ),
+                        Arguments.of("does not matter",
+                                (VoidResultFunction<String, String>) (String s) -> VoidResult.failure("failed"),
+                                VoidResult.failure("failed"))
+                );
+            }
+
+            @Test
+            public void flatMapToVoid_function_should_return_the_initial_failure_when_initial_result_is_a_failure() {
+                // given
+                Result<String, String> failure = Result.failure("already failed");
+                Function<String, VoidResult<String>> should_not_be_executed = s -> VoidResult.failure("should not be executed");
+
+                // when
+                var flatMappedResult = failure.flatMapToVoid(should_not_be_executed);
+
+                // then
+                assertThat(flatMappedResult).isEqualTo(VoidResult.failure("already failed"));
+            }
+
+            @Test
+            public void flatMapToVoid_function_should_not_execute_provided_bound_function_when_initial_result_is_a_failure() {
+                // given
+                Result<String, String> failure = Result.failure("already failed");
+                Function<String, VoidResult<String>> should_not_be_executed = spiedFunction(s -> VoidResult.failure("should not be executed"));
+
+                // when
+                failure.flatMapToVoid(should_not_be_executed);
+
+                // then
+                verify(should_not_be_executed, never()).apply(any());
+            }
+        }
     }
 
     private VerificationMode once() {

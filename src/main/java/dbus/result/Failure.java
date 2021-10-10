@@ -61,4 +61,10 @@ final class Failure<S, F> implements Result<S, F> {
         requireNonNull(bound);
         return this.cast();
     }
+
+    @Override
+    public VoidResult<F> flatMapToVoid(Function<? super S, ? extends VoidResult<? extends F>> bound) {
+        requireNonNull(bound);
+        return VoidResult.failure(value);
+    }
 }
