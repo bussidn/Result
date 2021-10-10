@@ -400,7 +400,7 @@ class ResultTest {
             @MethodSource("successAndFailure")
             public void flatMapToVoid_function_should_not_accept_null_parameter(Result<String, String> result) {
                 assertThrows(NullPointerException.class, () ->
-                        result.flatMapToVoid(null)
+                        result.flatMapToVoid((Function<String, VoidResult<String>>) null)
                 );
             }
 
@@ -462,6 +462,71 @@ class ResultTest {
                 // then
                 verify(should_not_be_executed, never()).apply(any());
             }
+
+
+            @ParameterizedTest(name = "flaMapToVoid (supplier) should not accept null parameter when result is {0}")
+            @MethodSource("successAndFailure")
+            public void flatMapToVoid_supplier_should_not_accept_null_parameter(Result<String, String> result) {
+                assertThrows(NullPointerException.class, () ->
+                        result.flatMapToVoid((Supplier<VoidResult<String>>) null)
+                );
+            }
+
+            @ParameterizedTest(name = "flatMapToVoid (supplier) should apply the provided bound supplier when initial result is a success")
+            @MethodSource("boundSupplier")
+            public void flatMapToVoid_supplier_should_apply_the_provided_bound_supplier_when_initial_result_is_a_success(
+                    String initialSuccessValue,
+                    Supplier<VoidResult<String>> boundSupplier,
+                    VoidResult<String> expectedResult
+            ) {
+                // given
+                Result<String, String> success = Result.success(initialSuccessValue);
+
+                // when
+                var flatMappedResult = success.flatMapToVoid(boundSupplier);
+
+                // then
+                assertThat(flatMappedResult).isEqualTo(expectedResult);
+            }
+
+            Stream<Arguments> boundSupplier() {
+                return Stream.of(
+                        Arguments.of("initial success",
+                                (Supplier<VoidResult<String>>) VoidResult::success,
+                                VoidResult.success()
+                        ),
+                        Arguments.of("does not matter",
+                                (Supplier<VoidResult<String>>) () -> VoidResult.failure("because"),
+                                VoidResult.failure("because"))
+                );
+            }
+
+            @Test
+            public void flatMapToVoid_supplier_should_return_the_initial_failure_when_initial_result_is_a_failure() {
+                // given
+                Result<String, String> failure = Result.failure("already failed");
+                Supplier<VoidResult<String>> should_not_be_executed = () -> VoidResult.failure("should not be executed");
+
+                // when
+                var flatMappedResult = failure.flatMapToVoid(should_not_be_executed);
+
+                // then
+                assertThat(flatMappedResult).isEqualTo(VoidResult.failure("already failed"));
+            }
+
+            @Test
+            public void flatMapToVoid_supplier_should_not_execute_provided_bound_supplier_when_initial_result_is_a_failure() {
+                // given
+                Result<String, String> failure = Result.failure("already failed");
+                Supplier<VoidResult<String>> should_not_be_executed = spiedSupplier(() -> VoidResult.failure("should not be executed"));
+
+                // when
+                failure.flatMapToVoid(should_not_be_executed);
+
+                // then
+                verify(should_not_be_executed, never()).get();
+            }
+
         }
     }
 

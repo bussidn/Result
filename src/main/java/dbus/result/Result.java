@@ -140,4 +140,17 @@ public interface Result<S, F> {
      * @throws NullPointerException if provided bound parameter is null
      */
     VoidResult<F> flatMapToVoid(Function<? super S, ? extends VoidResult<? extends F>> bound);
+
+    /**
+     * Result monad bind bridge function with a supplier that returns a {@link VoidResult}.
+     * <p>
+     * compose the provided bound supplier to the current success if any, discarding its value.
+     * If current state is a failure, the provided bound function is not called.
+     *
+     * @param bound the supplier to compose current result with
+     * @return  a result containing either the R success value if current and bound function result are successes,
+     *          a F-typed failure otherwise.
+     * @throws NullPointerException if provided bound parameter is null
+     */
+    VoidResult<F> flatMapToVoid(Supplier<? extends VoidResult<? extends F>> bound);
 }
