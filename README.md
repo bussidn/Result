@@ -35,12 +35,18 @@ This library intend to provide most of composition-generic-methods to easily com
   
 ### ToDo
 
+#### V.1 ?
 - bind & bridge functions
   - on ResultFunction flatMapToVoid (Function, Supplier)
   - on VoidResultFunction flatMapToResult
 - recover/tryRecovering
 - structure helpers (from boolean & predicate)
-- fail / recover methods
 - aggregation methods
-- Results (aggregation, reducing strategy, collect)
 - transformation methods (Stream, Optional)
+
+
+#### long term goals
+
+- Results (aggregation, reducing strategy, collect)
+- primitive results (intResult, doubleResult, etc.) ?
+- Observable with failure type ?
