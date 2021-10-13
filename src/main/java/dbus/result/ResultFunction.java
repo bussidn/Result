@@ -1,5 +1,6 @@
 package dbus.result;
 
+import dbus.result.void_.VoidResult;
 import dbus.result.void_.VoidResultFunction;
 
 import java.util.function.Consumer;
@@ -83,18 +84,44 @@ public interface ResultFunction<T, S, F> extends Function<T, Result<S, F>> {
     /**
      * Result monad bind function but with a function that does not need the present success state.
      * <p>
-     * compose the provided bound supplier to the current success if any, discarding its value.
-     * If current state is a failure, the provided bound function is not called.
+     * compose the provided bound supplier to the current function.
      *
-     * @param bound the supplier to compose current result with
+     * @param bound the supplier to compose current function with
      * @param <R>   the new success type
-     * @return  a result containing either the R success value if current and bound function result are successes,
-     *          a F-typed failure otherwise.
+     * @return  a result function composing this with the bound supplier.
      * @throws NullPointerException if provided bound parameter is null
      */
     default <R> ResultFunction<T, R, F> flatMap(Supplier<? extends Result<? extends R, ? extends F>> bound) {
         requireNonNull(bound);
         return t -> this.apply(t).flatMap(bound);
+    }
+
+    /**
+     * Result monad bind bridge function with a function that returns a {@link VoidResult}.
+     * <p>
+     * compose the provided bound function to the current function.
+     *
+     * @param bound the function to compose current function with
+     * @return  a void result returning function composing this with the bound function.
+     * @throws NullPointerException if provided bound parameter is null
+     */
+    default VoidResultFunction<T, F> flatMapToVoid(Function<? super S, ? extends VoidResult<? extends F>> bound) {
+        requireNonNull(bound);
+        return t -> this.apply(t).flatMapToVoid(bound);
+    }
+
+    /**
+     * Result monad bind bridge function with a supplier that returns a {@link VoidResult}.
+     * <p>
+     * compose the provided bound supplier to the current function.
+     *
+     * @param bound the supplier to compose current function with
+     * @return  a void result returning function composing this with the bound supplier.
+     * @throws NullPointerException if provided bound parameter is null
+     */
+    default VoidResultFunction<T, F> flatMapToVoid(Supplier<? extends VoidResult<? extends F>> bound) {
+        requireNonNull(bound);
+        return t -> this.apply(t).flatMapToVoid(bound);
     }
 
 }

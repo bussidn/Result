@@ -32,14 +32,15 @@ This library intend to provide most of composition-generic-methods to easily com
 - bind & bridge functions
   - on Result flatMapToVoid (Function, Supplier)
   - on VoidResult flatMapToResult
+  - on ResultFunction flatMapToVoid (Function, Supplier)
   
 ### ToDo
 
 #### V.1 ?
 - bind & bridge functions
-  - on ResultFunction flatMapToVoid (Function, Supplier)
   - on VoidResultFunction flatMapToResult
 - recover/tryRecovering
+- bridge functions
 - structure helpers (from boolean & predicate)
 - aggregation methods
 - transformation methods (Stream, Optional)

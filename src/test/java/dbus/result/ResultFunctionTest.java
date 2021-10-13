@@ -1,5 +1,7 @@
 package dbus.result;
 
+import dbus.result.void_.VoidResult;
+import dbus.result.void_.VoidResultFunction;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -147,7 +149,7 @@ class ResultFunctionTest {
             Function<String, Result<Integer, String>> should_not_be_executed = spiedFunction(s -> Result.failure("should not be executed"));
 
             // when
-            failure.flatMap(should_not_be_executed);
+            failure.flatMap(should_not_be_executed).apply("test");
 
             // then
             verify(should_not_be_executed, never()).apply(any());
@@ -206,12 +208,124 @@ class ResultFunctionTest {
             Supplier<Result<Integer, String>> should_not_be_executed = spiedSupplier(() -> Result.failure("should not be executed"));
 
             // when
-            failure.flatMap(should_not_be_executed);
+            failure.flatMap(should_not_be_executed).apply("test");
 
             // then
             verify(should_not_be_executed, never()).get();
         }
 
+        @Nested
+        @TestInstance(PER_CLASS)
+        class ToVoidResult {
+
+            @Test
+            public void flatMapToVoid_function_should_not_accept_null_parameter() {
+                assertThrows(NullPointerException.class, () ->
+                        ((ResultFunction<String, String, String>) s -> null).flatMapToVoid((Function<String, VoidResult<String>>) null)
+                );
+            }
+
+            @ParameterizedTest(name = "flatMapped (Function) function should return {1} when input is {0}")
+            @MethodSource("flatMap")
+            public void flatMapToVoid_function_should_compose_result_functions(
+                    String input,
+                    VoidResult<String> expectedResult
+            ) {
+                // given
+                ResultFunction<String, String, String> firstFunction = s -> s.length() < 10 ?
+                        Result.success(s + " world!") : Result.failure("failed first");
+
+                VoidResultFunction<String, String> secondFunction = s -> s.length() == 12 ?
+                        VoidResult.success() : VoidResult.failure("failed second");
+
+                // when
+                var compositionFunction = firstFunction.flatMapToVoid(secondFunction);
+
+                // then
+                Assertions.assertThat(compositionFunction.apply(input)).isEqualTo(expectedResult);
+            }
+
+            Stream<Arguments> flatMap() {
+                return Stream.of(
+                        Arguments.of("Hello", VoidResult.success()),
+                        Arguments.of("should fail first", VoidResult.failure("failed first")),
+                        Arguments.of("2", VoidResult.failure("failed second"))
+                );
+            }
+
+            @Test
+            public void flatMapToVoid_function_should_not_execute_provided_bound_function_when_initial_result_is_a_failure() {
+                // given
+                ResultFunction<String, String, String> failure = s -> Result.failure(s + "already failed");
+                Function<String, VoidResult<String>> should_not_be_executed = spiedFunction(s -> VoidResult.failure("should not be executed"));
+
+                // when
+                failure.flatMapToVoid(should_not_be_executed).apply("test");
+
+                // then
+                verify(should_not_be_executed, never()).apply(any());
+            }
+
+            @Test
+            public void flatMapToVoid_supplier_should_not_accept_null_parameter() {
+                assertThrows(NullPointerException.class, () ->
+                        ((ResultFunction<String, String, String>) s -> null).flatMapToVoid((Supplier<VoidResult<String>>) null)
+                );
+            }
+
+            @ParameterizedTest(name = "flatMapToVoid (supplier) should apply the provided bound supplier when initial result is a success")
+            @MethodSource("boundSupplier")
+            public void flatMapToVoid_supplier_should_apply_the_provided_bound_supplier_when_initial_result_is_a_success(
+                    Supplier<VoidResult<String>> boundSupplier
+            ) {
+                // given
+                ResultFunction<String, String, String> success = Result::success;
+
+                // when
+                var flatMappedResult = success.flatMapToVoid(boundSupplier);
+
+                // then
+                Assertions.assertThat(flatMappedResult.apply("test")).isEqualTo(boundSupplier.get());
+            }
+
+            Stream<Arguments> boundSupplier() {
+                return Stream.of(
+                        Arguments.of(
+                                (Supplier<VoidResult<String>>) VoidResult::success
+                        ),
+                        Arguments.of(
+                                (Supplier<VoidResult<String>>) () -> VoidResult.failure("because")
+                        )
+                );
+            }
+
+            @Test
+            public void flatMapToVoid_supplier_should_return_the_initial_failure_when_initial_result_is_a_failure() {
+                // given
+                ResultFunction<String, String, String> failure = s -> Result.failure("already failed : " + s);
+                Supplier<VoidResult<String>> should_not_be_executed = () -> VoidResult.failure("should not be executed");
+
+                // when
+                var flatMappedResult = failure.flatMapToVoid(should_not_be_executed);
+
+                // then
+                Assertions.assertThat(flatMappedResult.apply("because")).isEqualTo(VoidResult.failure("already failed : because"));
+            }
+
+            @Test
+            public void flatMapToVoid_supplier_should_not_execute_provided_bound_supplier_when_initial_result_is_a_failure() {
+                // given
+                ResultFunction<String, String, String> failure = s -> Result.failure("already failed : " + s);
+                Supplier<VoidResult<String>> should_not_be_executed = spiedSupplier(() -> VoidResult.failure("should not be executed"));
+
+                // when
+                failure.flatMapToVoid(should_not_be_executed).apply("test");
+
+                // then
+                verify(should_not_be_executed, never()).get();
+            }
+
+        }
     }
 
 }
