@@ -68,4 +68,16 @@ final class Success<S, F> implements Result<S, F> {
     public VoidResult<F> flatMapToVoid(Supplier<? extends VoidResult<? extends F>> bound) {
         return VoidResult.narrow(bound.get());
     }
+
+    @Override
+    public S recover(Function<? super F, ? extends S> recoveringFunction) {
+        requireNonNull(recoveringFunction);
+        return value;
+    }
+
+    @Override
+    public S recover(Supplier<? extends S> recoveringSupplier) {
+        requireNonNull(recoveringSupplier);
+        return value;
+    }
 }

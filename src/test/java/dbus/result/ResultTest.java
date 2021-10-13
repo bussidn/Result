@@ -530,6 +530,114 @@ class ResultTest {
         }
     }
 
+
+
+
+    @Nested
+    @TestInstance(PER_CLASS)
+    class Recover {
+
+        @ParameterizedTest(name = "recover (Function) should not accept null parameter when result is {0}")
+        @MethodSource("successAndFailure")
+        public void recover_function_should_not_accept_null_parameter(Result<String, String> result) {
+            assertThrows(NullPointerException.class, () ->
+                    result.recover((Function<String, String>) null)
+            );
+        }
+        
+        @Test
+        @DisplayName("recover (Function) should return the initial success when current result is a success")
+        public void recover_function_should_return_the_initial_success_when_current_result_is_a_success() {
+            // given
+            Result<String, String> result = Result.success("initial success");
+            
+            // when
+            String recovered = result.recover(s -> "should not be executed");
+
+            // then
+            assertThat(recovered).isEqualTo("initial success");
+        }
+
+        @Test
+        @DisplayName("recover (Function) should not execute provided recovering function when initial result is a success")
+        public void recover_function_should_not_execute_provided_recovering_function_when_initial_result_is_a_success() {
+            // given
+            Result<String, String> result = Result.success("initial success");
+            Function<String, String> should_not_be_executed = spiedFunction(s -> "should not be executed");
+
+            // when
+            result.recover(should_not_be_executed);
+
+            // then
+            verify(should_not_be_executed, never()).apply(any());
+        }
+
+        @Test
+        @DisplayName("recover (Function) should return the new success when current result is a failure")
+        public void recover_function_should_return_the_new_success_when_current_result_is_a_failure() {
+            // given
+            Result<String, String> result = Result.failure("failed so badly but it does not matter !");
+
+            // when
+            String recovered = result.recover(s -> "new success");
+
+            // then
+            assertThat(recovered).isEqualTo("new success");
+        }
+
+        @ParameterizedTest(name = "recover (Supplier) should not accept null parameter when result is {0}")
+        @MethodSource("successAndFailure")
+        public void recover_supplier_should_not_accept_null_parameter(Result<String, String> result) {
+            assertThrows(NullPointerException.class, () ->
+                    result.recover((Supplier<String>) null)
+            );
+        }
+
+        @Test
+        @DisplayName("recover (Supplier) should return the initial success when current result is a success")
+        public void recover_supplier_should_return_the_initial_success_when_current_result_is_a_success() {
+            // given
+            Result<String, String> result = Result.success("initial success");
+
+            // when
+            String recovered = result.recover(() -> "should not be executed");
+
+            // then
+            assertThat(recovered).isEqualTo("initial success");
+        }
+
+        @Test
+        @DisplayName("recover (Supplier) should not execute provided recovering function when initial result is a success")
+        public void recover_supplier_should_not_execute_provided_recovering_function_when_initial_result_is_a_success() {
+            // given
+            Result<String, String> result = Result.success("initial success");
+            Supplier<String> should_not_be_executed = spiedSupplier(() -> "should not be executed");
+
+            // when
+            result.recover(should_not_be_executed);
+
+            // then
+            verify(should_not_be_executed, never()).get();
+        }
+
+        @Test
+        @DisplayName("recover (Supplier) should return the new success when current result is a failure")
+        public void recover_supplier_should_return_the_new_success_when_current_result_is_a_failure() {
+            // given
+            Result<String, String> result = Result.failure("failed so badly but it does not matter !");
+
+            // when
+            String recovered = result.recover(() -> "new success");
+
+            // then
+            assertThat(recovered).isEqualTo("new success");
+        }
+
+        Stream<Arguments> successAndFailure() {
+            return ResultTest.successAndFailure();
+        }
+    }
+
     private VerificationMode once() {
         return Mockito.times(1);
     }

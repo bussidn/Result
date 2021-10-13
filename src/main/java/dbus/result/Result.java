@@ -153,4 +153,26 @@ public interface Result<S, F> {
      * @throws NullPointerException if provided bound parameter is null
      */
     VoidResult<F> flatMapToVoid(Supplier<? extends VoidResult<? extends F>> bound);
+
+    /**
+     * recover from the current failure, if any.
+     *
+     * If current state is a success, returns the curren success.
+     *
+     * @param recoveringFunction function to apply to the current failure if current state is a failure.
+     * @return the current success or the result of the recovering function
+     * @throws NullPointerException if provided recoveringFunction parameter is null
+     */
+    S recover(Function<? super F, ? extends S> recoveringFunction);
+
+    /**
+     * recover from the current failure, if any.
+     *
+     * If current state is a success, returns the curren success.
+     *
+     * @param recoveringSupplier to apply to the current failure if current state is a failure.
+     * @return the current success or the result of the recovering function
+     * @throws NullPointerException if provided recoveringSupplier parameter is null
+     */
+    S recover(Supplier<? extends S> recoveringSupplier);
 }

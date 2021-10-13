@@ -73,4 +73,14 @@ final class Failure<S, F> implements Result<S, F> {
         requireNonNull(bound);
         return VoidResult.failure(value);
     }
+
+    @Override
+    public S recover(Function<? super F, ? extends S> recoveringFunction) {
+        return recoveringFunction.apply(value);
+    }
+
+    @Override
+    public S recover(Supplier<? extends S> recoveringSupplier) {
+        return recoveringSupplier.get();
+    }
 }
