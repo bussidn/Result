@@ -331,73 +331,82 @@ class VoidResultTest {
             verify(should_not_be_executed, never()).get();
         }
 
-        @ParameterizedTest(name = "flatMapToResult should not accept null parameter when result is {0}")
-        @MethodSource("successAndFailure")
-        public void flatMapToResult_supplier_should_not_accept_null_parameter(VoidResult<String> result) {
-            assertThrows(NullPointerException.class, () ->
-                    result.flatMapToResult((Supplier<Result<Integer, String>>) null)
-            );
-        }
-
-        @ParameterizedTest(name = "flatMapToResult should apply the provided bound supplier when initial result is a success")
-        @MethodSource("boundSupplier")
-        public void flatMapToResult_should_apply_the_provided_bound_supplier_when_initial_result_is_a_success(
-                Supplier<Result<Integer, String>> boundSupplier,
-                Result<Integer, String> expectedResult
-        ) {
-            // given
-            VoidResult<String> success = VoidResult.success();
-
-            // when
-            Result<Integer, String> flatMappedResult = success.flatMapToResult(boundSupplier);
-
-            // then
-            assertThat(flatMappedResult).isEqualTo(expectedResult);
-        }
-
-        Stream<Arguments> boundSupplier() {
-            return Stream.of(
-                    Arguments.of(
-                            (Supplier<Result<Integer, String>>) () -> Result.success(12),
-                            Result.success(12)
-                    ),
-                    Arguments.of(
-                            (Supplier<Result<Integer, String>>) () -> Result.failure("because"),
-                            Result.failure("because")
-                    )
-            );
-        }
-
-        @Test
-        public void flatMapToResult_should_return_the_initial_failure_when_initial_result_is_a_failure() {
-            // given
-            VoidResult<String> failure = VoidResult.failure("already failed");
-            Supplier<Result<Integer, String>> should_not_be_executed = () -> Result.failure("should not be executed");
-
-            // when
-            Result<Integer, String> flatMappedResult = failure.flatMapToResult(should_not_be_executed);
-
-            // then
-            assertThat(flatMappedResult).isEqualTo(Result.failure("already failed"));
-        }
-
-        @Test
-        public void flatMapToResult_should_not_execute_provided_bound_supplier_when_initial_result_is_a_failure() {
-            // given
-            VoidResult<String> failure = VoidResult.failure("already failed");
-            Supplier<Result<Integer, String>> should_not_be_executed = spiedSupplier(() -> Result.failure("should not be executed"));
-
-            // when
-            failure.flatMapToResult(should_not_be_executed);
-
-            // then
-            verify(should_not_be_executed, never()).get();
-        }
-
         Stream<Arguments> successAndFailure() {
             return VoidResultTest.successAndFailure();
         }
 
+        @Nested
+        @TestInstance(PER_CLASS)
+        class ToResult {
+
+            @ParameterizedTest(name = "flatMapToResult should not accept null parameter when result is {0}")
+            @MethodSource("successAndFailure")
+            public void flatMapToResult_supplier_should_not_accept_null_parameter(VoidResult<String> result) {
+                assertThrows(NullPointerException.class, () ->
+                        result.flatMapToResult((Supplier<Result<Integer, String>>) null)
+                );
+            }
+
+            @ParameterizedTest(name = "flatMapToResult should apply the provided bound supplier when initial result is a success")
+            @MethodSource("boundSupplier")
+            public void flatMapToResult_should_apply_the_provided_bound_supplier_when_initial_result_is_a_success(
+                    Supplier<Result<Integer, String>> boundSupplier,
+                    Result<Integer, String> expectedResult
+            ) {
+                // given
+                VoidResult<String> success = VoidResult.success();
+
+                // when
+                Result<Integer, String> flatMappedResult = success.flatMapToResult(boundSupplier);
+
+                // then
+                assertThat(flatMappedResult).isEqualTo(expectedResult);
+            }
+
+            Stream<Arguments> boundSupplier() {
+                return Stream.of(
+                        Arguments.of(
+                                (Supplier<Result<Integer, String>>) () -> Result.success(12),
+                                Result.success(12)
+                        ),
+                        Arguments.of(
+                                (Supplier<Result<Integer, String>>) () -> Result.failure("because"),
+                                Result.failure("because")
+                        )
+                );
+            }
+
+            @Test
+            public void flatMapToResult_should_return_the_initial_failure_when_initial_result_is_a_failure() {
+                // given
+                VoidResult<String> failure = VoidResult.failure("already failed");
+                Supplier<Result<Integer, String>> should_not_be_executed = () -> Result.failure("should not be executed");
+
+                // when
+                Result<Integer, String> flatMappedResult = failure.flatMapToResult(should_not_be_executed);
+
+                // then
+                assertThat(flatMappedResult).isEqualTo(Result.failure("already failed"));
+            }
+
+            @Test
+            public void flatMapToResult_should_not_execute_provided_bound_supplier_when_initial_result_is_a_failure() {
+                // given
+                VoidResult<String> failure = VoidResult.failure("already failed");
+                Supplier<Result<Integer, String>> should_not_be_executed = spiedSupplier(() -> Result.failure("should not be executed"));
+
+                // when
+                failure.flatMapToResult(should_not_be_executed);
+
+                // then
+                verify(should_not_be_executed, never()).get();
+            }
+
+            Stream<Arguments> successAndFailure() {
+                return VoidResultTest.successAndFailure();
+            }
+
+        }
     }
 
     static Stream<Arguments> successAndFailure() {

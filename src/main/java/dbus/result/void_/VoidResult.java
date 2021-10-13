@@ -84,7 +84,7 @@ public interface VoidResult<F> {
     <S> Result<S, F> map(Supplier<? extends S> supplier);
 
     /**
-     * VoidResult monad bind function
+     * VoidResult monad bind function.
      * <p>
      * compose the provided bound supplier to the current success if any.
      * If current state is a failure, the provided bound function is not called.
@@ -97,7 +97,7 @@ public interface VoidResult<F> {
     VoidResult<F> flatMap(Supplier<? extends VoidResult<? extends F>> bound);
 
     /**
-     * Result monad bind function but with a function that does not need the present success state.
+     * Result monad bind bridge function.
      * <p>
      * compose the provided bound supplier to the current success if any.
      * If current state is a failure, the provided bound function is not called.

@@ -1,5 +1,6 @@
 package dbus.result.void_;
 
+import dbus.result.Result;
 import dbus.result.ResultFunction;
 
 import java.util.Objects;
@@ -65,12 +66,28 @@ public interface VoidResultFunction<T, F> extends Function<T, VoidResult<F>> {
      * <p>
      *
      * @param bound the runnable to apply after this
-     * @return a {@link VoidResultFunction} composing this and the runnable
+     * @return a {@link VoidResultFunction} composing this and the provided bound supplier
      * @throws NullPointerException when provided mapper is null
      * @see VoidResult#map(Runnable)
      */
     default VoidResultFunction<T, F> flatMap(Supplier<? extends VoidResult<F>> bound) {
         requireNonNull(bound);
         return t -> this.apply(t).flatMap(bound);
+    }
+
+    /**
+     * compose the current {@link VoidResultFunction} with a result supplier
+     * <p>
+     * It applies the provided supplier after this if the result is a success.
+     * Returns the current failure otherwise.
+     *
+     * @param bound the supplier to compose current result with
+     * @param <S>   the new success type
+     * @return  a {@link ResultFunction} composing this and the provided bound supplier
+     * @throws NullPointerException if provided bound parameter is null
+     */
+    default <S> ResultFunction<T, S, F> flatMapToResult(Supplier<? extends Result<? extends S, ? extends F>> bound) {
+        requireNonNull(bound);
+        return t -> this.apply(t).flatMapToResult(bound);
     }
 }
