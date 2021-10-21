@@ -124,4 +124,30 @@ public interface ResultFunction<T, S, F> extends Function<T, Result<S, F>> {
         return t -> this.apply(t).flatMapToVoid(bound);
     }
 
+    /**
+     * compose current function with a recovering function, transforming any failure into an instance of the success
+     * type.
+     *
+     * @param recoveringFunction recovering function to compose with current function with.
+     * @return a function composing this and the recovering function
+     * @throws NullPointerException if provided recoveringFunction parameter is null
+     */
+    default Function<T, S> thenRecover(Function<? super F, ? extends S> recoveringFunction) {
+        requireNonNull(recoveringFunction);
+        return t -> this.apply(t).recover(recoveringFunction);
+    }
+
+    /**
+     * compose current function with a recovering supplier, providing an instance of the success type in case of
+     * failure.
+     *
+     * @param recoveringSupplier recovering supplier to compose with current function with.
+     * @return a function composing this and the recovering supplier
+     * @throws NullPointerException if provided recoveringFunction parameter is null
+     */
+    default Function<T, S> thenRecover(Supplier<? extends S> recoveringSupplier) {
+        requireNonNull(recoveringSupplier);
+        return t -> this.apply(t).recover(recoveringSupplier);
+    }
+
 }

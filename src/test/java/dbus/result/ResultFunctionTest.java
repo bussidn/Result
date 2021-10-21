@@ -3,6 +3,7 @@ package dbus.result;
 import dbus.result.void_.VoidResult;
 import dbus.result.void_.VoidResultFunction;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -10,6 +11,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.temporal.Temporal;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -325,6 +329,110 @@ class ResultFunctionTest {
                 verify(should_not_be_executed, never()).get();
             }
 
+        }
+    }
+
+
+
+
+    @Nested
+    @TestInstance(PER_CLASS)
+    class Recover {
+
+        @Test
+        @DisplayName("thenRecover (Function) should not accept null parameter")
+        public void thenRecover_function_should_not_accept_null_parameter()  {
+            assertThrows(NullPointerException.class, () ->
+                    ((ResultFunction<String, Temporal, Integer>) s -> null).thenRecover((Function<Number, OffsetDateTime>) null)
+            );
+        }
+
+        @Test
+        @DisplayName("thenRecover (Function) should return initial success value when initial function returns a success")
+        public void thenRecover_function_should_return_initial_success_value_when_initial_function_returns_a_success() {
+            // given
+            ResultFunction<String, String, Integer> successProvidingFunction = s -> Result.success("Success !");
+
+            // when
+            String recovered = successProvidingFunction.thenRecover(i -> String.format("failed because %d was too low", i)).apply("test");
+
+            // then
+            assertThat(recovered).isEqualTo("Success !");
+        }
+
+        @Test
+        @DisplayName("thenRecover (Function) should apply the recovering function when initial function returns a failure")
+        public void thenRecover_function_should_apply_the_recovering_function_when_initial_function_returns_a_failure() {
+            // given
+            ResultFunction<String, String, Integer> successProvidingFunction = s -> Result.failure(0);
+
+            // when
+            String recovered = successProvidingFunction.thenRecover(i -> String.format("failed because %d was too low", i)).apply("test");
+
+            // then
+            assertThat(recovered).isEqualTo("failed because 0 was too low");
+        }
+
+        @Test
+        @DisplayName("thenRecover (Function) should not apply the recovering function when initial function returns a success")
+        public void thenRecover_function_should_not_apply_the_recovering_function_when_initial_function_returns_a_success() {
+            // given
+            ResultFunction<String, String, Integer> successProvidingFunction = s -> Result.success("Success !!");
+            Function<Integer, String> recoveringFunction = spiedFunction(i -> String.format("failed because %d was too low", i));
+
+            // when
+            String recovered = successProvidingFunction.thenRecover(recoveringFunction).apply("test");
+
+            // then
+            verify(recoveringFunction, never()).apply(any());
+        }
+
+        @Test
+        @DisplayName("thenRecover (Supplier) should not accept null parameter")
+        public void thenRecover_supplier_should_not_accept_null_parameter()  {
+            assertThrows(NullPointerException.class, () ->
+                    ((ResultFunction<String, Temporal, Integer>) s -> null).thenRecover((Supplier<Instant>) null)
+            );
+        }
+
+        @Test
+        @DisplayName("thenRecover (Supplier) should return initial success value when initial function returns a success")
+        public void thenRecover_supplier_should_return_initial_success_value_when_initial_function_returns_a_success() {
+            // given
+            ResultFunction<String, String, Integer> successProvidingFunction = s -> Result.success("Success !");
+
+            // when
+            String recovered = successProvidingFunction.thenRecover(() -> "Failed !").apply("test");
+
+            // then
+            assertThat(recovered).isEqualTo("Success !");
+        }
+
+        @Test
+        @DisplayName("thenRecover (Supplier) should execute the recovering supplier when initial function returns a failure")
+        public void thenRecover_supplier_should_execute_the_recovering_supplier_when_initial_function_returns_a_failure() {
+            // given
+            ResultFunction<String, String, Integer> successProvidingFunction = s -> Result.failure(0);
+
+            // when
+            String recovered = successProvidingFunction.thenRecover(() -> "Failed !").apply("test");
+
+            // then
+            assertThat(recovered).isEqualTo("Failed !");
+        }
+
+        @Test
+        @DisplayName("thenRecover (Supplier) should not execute the recovering supplier when initial function returns a success")
+        public void thenRecover_supplier_should_not_execute_the_recovering_supplier_when_initial_function_returns_a_success() {
+            // given
+            ResultFunction<String, String, Integer> successProvidingFunction = s -> Result.success("Success !!");
+            Function<Integer, String> recoveringFunction = spiedFunction(i -> String.format("failed because %d was too low", i));
+
+            // when
+            String recovered = successProvidingFunction.thenRecover(recoveringFunction).apply("test");
+
+            // then
+            verify(recoveringFunction, never()).apply(any());
         }
     }
 
