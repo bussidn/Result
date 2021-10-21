@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static dbus.result.Result.narrow;
 import static java.util.Objects.requireNonNull;
 
 @EqualsAndHashCode
@@ -82,5 +83,15 @@ final class Failure<S, F> implements Result<S, F> {
     @Override
     public S recover(Supplier<? extends S> recoveringSupplier) {
         return recoveringSupplier.get();
+    }
+
+    @Override
+    public Result<S, F> tryRecovering(Function<? super F, ? extends Result<? extends S, ? extends F>> recoveringFunction) {
+        return narrow(recoveringFunction.apply(value));
+    }
+
+    @Override
+    public Result<S, F> tryRecovering(Supplier<? extends Result<? extends S, ? extends F>> recoveringSupplier) {
+        return narrow(recoveringSupplier.get());
     }
 }

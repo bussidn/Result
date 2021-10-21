@@ -80,4 +80,16 @@ final class Success<S, F> implements Result<S, F> {
         requireNonNull(recoveringSupplier);
         return value;
     }
+
+    @Override
+    public Result<S, F> tryRecovering(Function<? super F, ? extends Result<? extends S, ? extends F>> recoveringFunction) {
+        requireNonNull(recoveringFunction);
+        return this;
+    }
+
+    @Override
+    public Result<S, F> tryRecovering(Supplier<? extends Result<? extends S, ? extends F>> recoveringSupplier) {
+        requireNonNull(recoveringSupplier);
+        return this;
+    }
 }

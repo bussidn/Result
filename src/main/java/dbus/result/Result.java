@@ -175,4 +175,28 @@ public interface Result<S, F> {
      * @throws NullPointerException if provided recoveringSupplier parameter is null
      */
     S recover(Supplier<? extends S> recoveringSupplier);
+
+    /**
+     * try to recover from the current failure, if any.
+     * The provided recovering function may also fail, making this an attempt at recovering.
+     *
+     * If current state is a success, it is returned.
+     *
+     * @param recoveringFunction function to apply to the current failure if current state is a failure.
+     * @return the current success or the result of the recovering function applied to the current failure.
+     * @throws NullPointerException if provided recoveringFunction parameter is null
+     */
+    Result<S, F> tryRecovering(Function<? super F, ? extends Result<? extends S, ? extends F>> recoveringFunction);
+
+    /**
+     * try to recover from the current failure, if any.
+     * The provided recovering function may also fail, making this an attempt at recovering.
+     *
+     * If current state is a success, it is returned.
+     *
+     * @param recoveringSupplier supplier to execute if current state is a failure.
+     * @return the current success, otherwise the result of the recovering supplier.
+     * @throws NullPointerException if provided recoveringFunction parameter is null
+     */
+    Result<S, F> tryRecovering(Supplier<? extends Result<? extends S, ? extends F>> recoveringSupplier);
 }

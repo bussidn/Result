@@ -37,12 +37,13 @@ This library intend to provide most of composition-generic-methods to easily com
 - recover
   - Result (Function & Supplier)
   - ResultFunction (Function & Supplier)
+-tryRecovering
+  - Result (Function & Supplier)
   
 ### ToDo
 
 #### V.1 ?
 -tryRecovering
-  - Result (Function & Supplier)
   - ResultFunction (Function & Supplier)
   - VoidResult
   - VoidResultFunction
