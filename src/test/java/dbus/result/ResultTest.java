@@ -635,7 +635,7 @@ class ResultTest {
 
         @ParameterizedTest(name = "tryRecovering (Function) should not accept null parameter when result is {0}")
         @MethodSource("successAndFailure")
-        public void tryRecover_function_should_not_accept_null_parameter(Result<String, String> result) {
+        public void tryRecovering_function_should_not_accept_null_parameter(Result<String, String> result) {
             assertThrows(NullPointerException.class, () ->
                     result.tryRecovering((Function<Object, Result<String, String>>) null)
             );

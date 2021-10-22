@@ -7,6 +7,7 @@ import lombok.ToString;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static dbus.result.void_.VoidResult.narrow;
 import static java.util.Objects.requireNonNull;
 
 @EqualsAndHashCode
@@ -51,6 +52,16 @@ final public class Failure<F> implements VoidResult<F> {
     public <R> Result<R, F> flatMapToResult(Supplier<? extends Result<? extends R, ? extends F>> bound) {
         requireNonNull(bound);
         return Result.failure(value);
+    }
+
+    @Override
+    public VoidResult<F> tryRecovering(Function<? super F, ? extends VoidResult<? extends F>> recoveringFunction) {
+        return narrow(recoveringFunction.apply(value));
+    }
+
+    @Override
+    public VoidResult<F> tryRecovering(Supplier<? extends VoidResult<? extends F>> recoveringSupplier) {
+        return narrow(recoveringSupplier.get());
     }
 
 }

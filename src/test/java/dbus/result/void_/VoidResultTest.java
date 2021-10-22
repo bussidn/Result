@@ -10,17 +10,18 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static dbus.result.MockitoLambdaSpying.spiedRunnable;
-import static dbus.result.MockitoLambdaSpying.spiedSupplier;
+import static dbus.result.MockitoLambdaSpying.*;
 import static dbus.result.void_.VoidResult.failure;
 import static dbus.result.void_.VoidResult.success;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -406,6 +407,117 @@ class VoidResultTest {
                 return VoidResultTest.successAndFailure();
             }
 
+        }
+    }
+
+    @Nested
+    @TestInstance(PER_CLASS)
+    class Recover {
+
+        @ParameterizedTest(name = "tryRecovering (Function) should not accept null parameter when result is {0}")
+        @MethodSource("successAndFailure")
+        public void tryRecovering_function_should_not_accept_null_parameter(VoidResult<String> result) {
+            assertThrows(NullPointerException.class, () ->
+                    result.tryRecovering((Function<Object, VoidResult<String>>) null)
+            );
+        }
+
+        @Test
+        @DisplayName("tryRecovering (Function) should return the initial success when current result is a success")
+        public void tryRecovering_function_should_return_the_initial_success_when_current_result_is_a_success() {
+            // given
+            VoidResult<String> result = VoidResult.success();
+
+            // when
+            var recovered = result.tryRecovering(s -> VoidResult.failure("should not be executed"));
+
+            // then
+            assertThat(recovered).isEqualTo(VoidResult.success());
+        }
+
+        @Test
+        @DisplayName("tryRecovering (Function) should not execute provided recovering function when initial result is a success")
+        public void tryRecovering_function_should_not_execute_provided_recovering_function_when_initial_result_is_a_success() {
+            // given
+            VoidResult<String> result = VoidResult.success();
+            Function<String, VoidResult<String>> should_not_be_executed = spiedFunction(s -> VoidResult.success());
+
+            // when
+            result.tryRecovering(should_not_be_executed);
+
+            // then
+            verify(should_not_be_executed, never()).apply(any());
+        }
+
+
+
+        @ParameterizedTest(name = "tryRecovering (Function) should return the recovering function result when initial result is a failure : {0}")
+        @MethodSource("successAndFailure")
+        public void tryRecovering_function_should_return_the_new_success_when_current_result_is_a_failure(
+                final VoidResult<String> recoveringFunctionResult
+        ) {
+            // given
+            VoidResult<String> result = VoidResult.failure("failed so badly but it does not matter !");
+
+            // when
+            var recovered = result.tryRecovering(s -> recoveringFunctionResult);
+
+            // then
+            assertThat(recovered).isEqualTo(recoveringFunctionResult);
+        }
+
+        @ParameterizedTest(name = "tryRecovering (Supplier) should not accept null parameter when result is {0}")
+        @MethodSource("successAndFailure")
+        public void tryRecovering_supplier_should_not_accept_null_parameter(VoidResult<String> result) {
+            assertThrows(NullPointerException.class, () ->
+                    result.tryRecovering((Supplier<VoidResult<String>>) null)
+            );
+        }
+
+        @Test
+        @DisplayName("tryRecovering (Supplier) should return the initial success when current result is a success")
+        public void tryRecovering_supplier_should_return_the_initial_success_when_current_result_is_a_success() {
+            // given
+            VoidResult<String> result = VoidResult.success();
+
+            // when
+            var recovered = result.tryRecovering(() -> VoidResult.failure("should not be executed"));
+
+            // then
+            assertThat(recovered).isEqualTo(VoidResult.success());
+        }
+
+        @Test
+        @DisplayName("tryRecovering (Supplier) should not execute provided recovering function when initial result is a success")
+        public void tryRecovering_supplier_should_not_execute_provided_recovering_function_when_initial_result_is_a_success() {
+            // given
+            VoidResult<String> result = VoidResult.success();
+            Supplier<VoidResult<String>> should_not_be_executed = spiedSupplier(() -> VoidResult.failure("should not be executed"));
+
+            // when
+            result.tryRecovering(should_not_be_executed);
+
+            // then
+            verify(should_not_be_executed, never()).get();
+        }
+
+        @ParameterizedTest(name = "tryRecovering (Supplier) should return the recovering supplier result when initial result is a failure : {0}")
+        @MethodSource("successAndFailure")
+        public void tryRecovering_supplier_should_return_the_new_success_when_current_result_is_a_failure(
+                final VoidResult<String> recoveringSupplierResult
+        ) {
+            // given
+            VoidResult<String> result = VoidResult.failure("failed so badly but it does not matter !");
+
+            // when
+            var recovered = result.tryRecovering(() -> recoveringSupplierResult);
+
+            // then
+            assertThat(recovered).isEqualTo(recoveringSupplierResult);
+        }
+
+        Stream<Arguments> successAndFailure() {
+            return VoidResultTest.successAndFailure();
         }
     }
 

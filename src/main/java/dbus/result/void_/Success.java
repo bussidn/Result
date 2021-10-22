@@ -57,4 +57,16 @@ final public class Success<F> implements VoidResult<F> {
         return Result.narrow(bound.get());
     }
 
+    @Override
+    public VoidResult<F> tryRecovering(Function<? super F, ? extends VoidResult<? extends F>> recoveringFunction) {
+        requireNonNull(recoveringFunction);
+        return this;
+    }
+
+    @Override
+    public VoidResult<F> tryRecovering(Supplier<? extends VoidResult<? extends F>> recoveringSupplier) {
+        requireNonNull(recoveringSupplier);
+        return this;
+    }
+
 }
