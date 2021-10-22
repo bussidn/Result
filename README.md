@@ -39,12 +39,12 @@ This library intend to provide most of composition-generic-methods to easily com
   - ResultFunction (Function & Supplier)
 -tryRecovering
   - Result (Function & Supplier)
+  - ResultFunction (Function & Supplier)
   
 ### ToDo
 
 #### V.1 ?
 -tryRecovering
-  - ResultFunction (Function & Supplier)
   - VoidResult
   - VoidResultFunction
 - mapFailure

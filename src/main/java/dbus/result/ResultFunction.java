@@ -150,4 +150,28 @@ public interface ResultFunction<T, S, F> extends Function<T, Result<S, F>> {
         return t -> this.apply(t).recover(recoveringSupplier);
     }
 
+    /**
+     * compose the current function with a recovering function that may also fail.
+     *
+     * @param recoveringFunction function to compose with the current function
+     * @return a function composing this and the recovering function
+     * @throws NullPointerException if provided recoveringFunction parameter is null
+     */
+    default ResultFunction<T, S, F> thenTryRecovering(Function<? super F, ? extends Result<? extends S, ? extends F>> recoveringFunction) {
+        requireNonNull(recoveringFunction);
+        return t -> this.apply(t).tryRecovering(recoveringFunction);
+    }
+
+    /**
+     * compose the current function with a recovering supplier that may also fail.
+     *
+     * @param recoveringSupplier supplier to compose with the current function
+     * @return a function composing this and the recovering supplier
+     * @throws NullPointerException if provided recoveringFunction parameter is null
+     */
+    default ResultFunction<T, S, F> thenTryRecovering(Supplier<? extends Result<? extends S, ? extends F>> recoveringSupplier) {
+        requireNonNull(recoveringSupplier);
+        return t -> this.apply(t).tryRecovering(recoveringSupplier);
+    }
+
 }

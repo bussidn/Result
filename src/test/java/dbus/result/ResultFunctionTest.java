@@ -333,15 +333,13 @@ class ResultFunctionTest {
     }
 
 
-
-
     @Nested
     @TestInstance(PER_CLASS)
     class Recover {
 
         @Test
         @DisplayName("thenRecover (Function) should not accept null parameter")
-        public void thenRecover_function_should_not_accept_null_parameter()  {
+        public void thenRecover_function_should_not_accept_null_parameter() {
             assertThrows(NullPointerException.class, () ->
                     ((ResultFunction<String, Temporal, Integer>) s -> null).thenRecover((Function<Number, OffsetDateTime>) null)
             );
@@ -381,7 +379,7 @@ class ResultFunctionTest {
             Function<Integer, String> recoveringFunction = spiedFunction(i -> String.format("failed because %d was too low", i));
 
             // when
-            String recovered = successProvidingFunction.thenRecover(recoveringFunction).apply("test");
+            successProvidingFunction.thenRecover(recoveringFunction).apply("test");
 
             // then
             verify(recoveringFunction, never()).apply(any());
@@ -389,7 +387,7 @@ class ResultFunctionTest {
 
         @Test
         @DisplayName("thenRecover (Supplier) should not accept null parameter")
-        public void thenRecover_supplier_should_not_accept_null_parameter()  {
+        public void thenRecover_supplier_should_not_accept_null_parameter() {
             assertThrows(NullPointerException.class, () ->
                     ((ResultFunction<String, Temporal, Integer>) s -> null).thenRecover((Supplier<Instant>) null)
             );
@@ -429,10 +427,126 @@ class ResultFunctionTest {
             Function<Integer, String> recoveringFunction = spiedFunction(i -> String.format("failed because %d was too low", i));
 
             // when
-            String recovered = successProvidingFunction.thenRecover(recoveringFunction).apply("test");
+            successProvidingFunction.thenRecover(recoveringFunction).apply("test");
 
             // then
             verify(recoveringFunction, never()).apply(any());
+        }
+
+        @Test
+        @DisplayName("thenTryRecovering (Function) should not accept null parameter")
+        public void thenTryRecovering_function_should_not_accept_null_parameter() {
+            assertThrows(NullPointerException.class, () ->
+                    ((ResultFunction<String, Temporal, Integer>) s -> null)
+                            .thenTryRecovering((Function<Number, Result<OffsetDateTime, Integer>>) null)
+            );
+        }
+
+        @Test
+        @DisplayName("thenTryRecovering (Function) should return initial success value when initial function returns a success")
+        public void thenTryRecovering_function_should_return_initial_success_value_when_initial_function_returns_a_success() {
+            // given
+            ResultFunction<String, String, Integer> successProvidingFunction = s -> Result.success("Success !");
+
+            // when
+            var newResult =
+                    successProvidingFunction
+                            .thenTryRecovering(i -> Result.success("should not matter"))
+                            .apply("test");
+
+            // then
+            assertThat(newResult).isEqualTo(Result.success("Success !"));
+        }
+
+        @ParameterizedTest(name = "thenTryRecovering (Function) should return the recovering function result when initial result is a failure : {0}")
+        @MethodSource("successAndFailure")
+        public void thenTryRecovering_function_should_return_the_recovering_function_result_when_initial_result_is_a_failure(
+                final Result<String, String> recoveringFunctionResult
+        ) {
+            // given
+            ResultFunction<String, String, String> successProvidingFunction = s -> Result.failure("should be recovered");
+
+            // when
+            var recovered = successProvidingFunction.thenTryRecovering(i -> recoveringFunctionResult)
+                    .apply("test");
+
+            // then
+            assertThat(recovered).isEqualTo(recoveringFunctionResult);
+        }
+
+        @Test
+        @DisplayName("thenTryRecovering (Function) should not apply the recovering function when initial function returns a success")
+        public void thenTryRecovering_function_should_not_apply_the_recovering_function_when_initial_function_returns_a_success() {
+            // given
+            ResultFunction<String, String, Integer> successProvidingFunction = s -> Result.success("Success !!");
+            Function<Integer, Result<String, Integer>> recoveringFunction = spiedFunction(i -> Result.success("should not matter"));
+
+            // when
+            successProvidingFunction.thenTryRecovering(recoveringFunction).apply("test");
+
+            // then
+            verify(recoveringFunction, never()).apply(any());
+        }
+
+        @Test
+        @DisplayName("thenTryRecovering (Supplier) should not accept null parameter")
+        public void thenTryRecovering_supplier_should_not_accept_null_parameter() {
+            assertThrows(NullPointerException.class, () ->
+                    ((ResultFunction<String, Temporal, Integer>) s -> null)
+                            .thenTryRecovering((Supplier<Result<Instant, Integer>>) null)
+            );
+        }
+
+        @Test
+        @DisplayName("thenTryRecovering (Supplier) should return initial success value when initial function returns a success")
+        public void thenTryRecovering_supplier_should_return_initial_success_value_when_initial_function_returns_a_success() {
+            // given
+            ResultFunction<String, String, Integer> successProvidingFunction = s -> Result.success("Success !");
+
+            // when
+            var recovered =
+                    successProvidingFunction
+                            .thenTryRecovering(() -> Result.success("should not be considered"))
+                            .apply("test");
+
+            // then
+            assertThat(recovered).isEqualTo(Result.success("Success !"));
+        }
+
+        @ParameterizedTest(name = "thenTryRecovering (Function) should return the recovering supplier result when initial result is a failure : {0}")
+        @MethodSource("successAndFailure")
+        public void thenTryRecovering_supplier_should_return_the_recovering_supplier_result_when_initial_result_is_a_failure(
+                final Result<String, String> recoveringSupplierResult
+        ) {
+            // given
+            ResultFunction<String, String, String> successProvidingFunction = s -> Result.failure("should be recovered");
+
+            // when
+            var recovered =
+                    successProvidingFunction
+                            .thenTryRecovering(() -> recoveringSupplierResult)
+                            .apply("test");
+
+            // then
+            assertThat(recovered).isEqualTo(recoveringSupplierResult);
+        }
+
+        @Test
+        @DisplayName("thenTryRecovering (Supplier) should not execute the recovering supplier when initial function returns a success")
+        public void thenTryRecovering_supplier_should_not_execute_the_recovering_supplier_when_initial_function_returns_a_success() {
+            // given
+            ResultFunction<String, String, Integer> successProvidingFunction = s -> Result.success("Success !!");
+            Function<Integer, Result<String, Integer>> recoveringFunction = spiedFunction(i -> Result.success("unused"));
+
+            // when
+            successProvidingFunction.thenTryRecovering(recoveringFunction).apply("test");
+
+            // then
+            verify(recoveringFunction, never()).apply(any());
+        }
+
+        Stream<Arguments> successAndFailure() {
+            return ResultTest.successAndFailure();
         }
     }
 
