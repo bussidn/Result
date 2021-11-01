@@ -83,11 +83,35 @@ public interface VoidResultFunction<T, F> extends Function<T, VoidResult<F>> {
      *
      * @param bound the supplier to compose current result with
      * @param <S>   the new success type
-     * @return  a {@link ResultFunction} composing this and the provided bound supplier
+     * @return a {@link ResultFunction} composing this and the provided bound supplier
      * @throws NullPointerException if provided bound parameter is null
      */
     default <S> ResultFunction<T, S, F> flatMapToResult(Supplier<? extends Result<? extends S, ? extends F>> bound) {
         requireNonNull(bound);
         return t -> this.apply(t).flatMapToResult(bound);
+    }
+
+    /**
+     * compose the current {@link VoidResultFunction} with a recovering function that may also fail.
+     *
+     * @param recoveringFunction function to compose with the current function
+     * @return a function composing this and the recovering function
+     * @throws NullPointerException if provided recoveringFunction parameter is null
+     */
+    default VoidResultFunction<T, F> thenTryRecovering(Function<? super F, ? extends VoidResult<? extends F>> recoveringFunction) {
+        requireNonNull(recoveringFunction);
+        return t -> this.apply(t).tryRecovering(recoveringFunction);
+    }
+
+    /**
+     * compose the current {@link VoidResultFunction} with a recovering supplier that may also fail.
+     *
+     * @param recoveringSupplier supplier to compose with the current function
+     * @return a function composing this and the recovering supplier
+     * @throws NullPointerException if provided recoveringSupplier parameter is null
+     */
+    default VoidResultFunction<T, F> thenTryRecovering(Supplier<? extends VoidResult<? extends F>> recoveringSupplier) {
+        requireNonNull(recoveringSupplier);
+        return t -> this.apply(t).tryRecovering(recoveringSupplier);
     }
 }

@@ -130,7 +130,7 @@ public interface VoidResult<F> {
      *
      * @param recoveringSupplier supplier to execute if current state is a failure.
      * @return the current success, otherwise the result of the recovering supplier.
-     * @throws NullPointerException if provided recoveringFunction parameter is null
+     * @throws NullPointerException if provided recoveringSupplier parameter is null
      */
     VoidResult<F> tryRecovering(Supplier<? extends VoidResult<? extends F>> recoveringSupplier);
 }
