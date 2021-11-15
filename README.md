@@ -47,7 +47,7 @@ This library intend to provide most of composition-generic-methods to easily com
 
 #### V.1 ?
 
-- Map Functions (Supplier) 
+- map (Supplier) on ResultFunction
 - mapFailure
 - bridge functions (toVoidResult, toVoidResultFunction, toVoid ?)
 - structure helpers (from boolean & predicate)

@@ -46,6 +46,12 @@ final class Failure<S, F> implements Result<S, F> {
     }
 
     @Override
+    public <R> Result<R, F> map(Supplier<? extends R> mapper) {
+        requireNonNull(mapper);
+        return this.cast();
+    }
+
+    @Override
     public VoidResult<F> map(Consumer<? super S> consumer) {
         requireNonNull(consumer);
         return VoidResult.failure(value);

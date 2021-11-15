@@ -89,6 +89,21 @@ public interface Result<S, F> {
     <R> Result<R, F> map(Function<? super S, ? extends R> mapper);
 
     /**
+     * Result functor map function.
+     * <p>
+     * It applies the provided mapper to the success value if this is a success.
+     * Returns the current failure otherwise.
+     * <p>
+     * similar to {@link Result#map(Function)} but the current success value is ignored.
+     *
+     * @param mapper the mapper to apply to the success
+     * @param <R>    the new success return type
+     * @return a Result containing either a mapped success or the current failure
+     * @throws NullPointerException when provided mapper is null
+     */
+    <R> Result<R, F> map(Supplier<? extends R> mapper);
+
+    /**
      * bridge function from Result functor to VoidResult.
      * <p>
      * It applies the provided consumer to the success value if this is a success.
@@ -108,8 +123,8 @@ public interface Result<S, F> {
      *
      * @param bound the function to compose current result with
      * @param <R>   the new success type
-     * @return  a result containing either the R success value if current and bound function result are successes,
-     *          a F-typed failure otherwise.
+     * @return a result containing either the R success value if current and bound function result are successes,
+     * a F-typed failure otherwise.
      * @throws NullPointerException if provided bound parameter is null
      */
     <R> Result<R, F> flatMap(Function<? super S, ? extends Result<? extends R, ? extends F>> bound);
@@ -122,8 +137,8 @@ public interface Result<S, F> {
      *
      * @param bound the supplier to compose current result with
      * @param <R>   the new success type
-     * @return  a result containing either the R success value if current and bound function result are successes,
-     *          a F-typed failure otherwise.
+     * @return a result containing either the R success value if current and bound function result are successes,
+     * a F-typed failure otherwise.
      * @throws NullPointerException if provided bound parameter is null
      */
     <R> Result<R, F> flatMap(Supplier<? extends Result<? extends R, ? extends F>> bound);
@@ -135,8 +150,8 @@ public interface Result<S, F> {
      * If current state is a failure, the provided bound function is not called.
      *
      * @param bound the function to compose current result with
-     * @return  a result containing either the R success value if current and bound function result are successes,
-     *          a F-typed failure otherwise.
+     * @return a result containing either the R success value if current and bound function result are successes,
+     * a F-typed failure otherwise.
      * @throws NullPointerException if provided bound parameter is null
      */
     VoidResult<F> flatMapToVoid(Function<? super S, ? extends VoidResult<? extends F>> bound);
@@ -148,15 +163,15 @@ public interface Result<S, F> {
      * If current state is a failure, the provided bound function is not called.
      *
      * @param bound the supplier to compose current result with
-     * @return  a result containing either the R success value if current and bound function result are successes,
-     *          a F-typed failure otherwise.
+     * @return a result containing either the R success value if current and bound function result are successes,
+     * a F-typed failure otherwise.
      * @throws NullPointerException if provided bound parameter is null
      */
     VoidResult<F> flatMapToVoid(Supplier<? extends VoidResult<? extends F>> bound);
 
     /**
      * recover from the current failure, if any.
-     *
+     * <p>
      * If current state is a success, returns the curren success.
      *
      * @param recoveringFunction function to apply to the current failure if current state is a failure.
@@ -167,7 +182,7 @@ public interface Result<S, F> {
 
     /**
      * recover from the current failure, if any.
-     *
+     * <p>
      * If current state is a success, returns the curren success.
      *
      * @param recoveringSupplier to apply to the current failure if current state is a failure.
@@ -179,7 +194,7 @@ public interface Result<S, F> {
     /**
      * try to recover from the current failure, if any.
      * The provided recovering function may also fail, making this an attempt at recovering.
-     *
+     * <p>
      * If current state is a success, it is returned.
      *
      * @param recoveringFunction function to apply to the current failure if current state is a failure.
@@ -191,7 +206,7 @@ public interface Result<S, F> {
     /**
      * try to recover from the current failure, if any.
      * The provided recovering function may also fail, making this an attempt at recovering.
-     *
+     * <p>
      * If current state is a success, it is returned.
      *
      * @param recoveringSupplier supplier to execute if current state is a failure.

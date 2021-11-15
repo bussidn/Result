@@ -216,6 +216,68 @@ class ResultTest {
             assertThat(mapped).isEqualTo(failure(17));
         }
 
+        @Test
+        @DisplayName("map (Function) should not apply mapper when result is a failure")
+        public void map_function_should_not_apply_mapper_when_result_is_a_failure() {
+            // given
+            Result<String, Integer> success = failure(12);
+            Function<String, String> spiedMapper = spiedFunction(s -> s);
+
+            // when
+            success.map(spiedMapper);
+
+            // then
+            verify(spiedMapper, never()).apply(any());
+        }
+
+        @ParameterizedTest(name = "map (Supplier) should not accept null parameter when result is {0}")
+        @MethodSource("successAndFailure")
+        public void map_supplier_should_not_accept_null_parameter(Result<String, String> result) {
+            assertThrows(NullPointerException.class, () ->
+                    result.map((Supplier<String>) null)
+            );
+        }
+
+        @Test
+        @DisplayName("map (Supplier) should apply mapper when result is a success")
+        public void map_supplier_should_apply_mapper_when_result_is_a_success() {
+            // given
+            Result<String, Integer> success = success("Should not matter");
+
+            // when
+            Result<String, Integer> mapped = success.map(() -> "Supplied success");
+
+            // then
+            assertThat(mapped).isEqualTo(success("Supplied success"));
+        }
+
+        @Test
+        @DisplayName("map (Supplier) should return current failure when result is a failure")
+        public void map_supplier_should_return_current_failure_when_result_is_a_failure() {
+            // given
+            Result<String, Integer> failure = failure(17);
+
+            // when
+            Result<String, Integer> mapped = failure.map(() -> " should not matter");
+
+            // then
+            assertThat(mapped).isEqualTo(failure(17));
+        }
+
+        @Test
+        @DisplayName("map (Supplier) should not execute mapper when result is a failure")
+        public void map_Supplier_should_not_execute_mapper_when_result_is_a_failure() {
+            // given
+            Result<String, Integer> success = failure(12);
+            Supplier<String> spiedMapper = spiedSupplier(() -> "test");
+
+            // when
+            success.map(spiedMapper);
+
+            // then
+            verify(spiedMapper, never()).get();
+        }
+
         @ParameterizedTest(name = "map (Consumer) should not accept null parameter when result is {0}")
         @MethodSource("successAndFailure")
         public void map_consumer_should_not_accept_null_parameter(Result<String, String> result) {
@@ -225,18 +287,31 @@ class ResultTest {
         }
 
         @Test
-        @DisplayName("map (Consumer) should apply consumer when result is a success")
-        public void map_consumer_should_apply_consumer_when_result_is_a_success() {
+        @DisplayName("map (Consumer) should return a void success when result is a success")
+        public void map_consumer_should_return_void_success_when_result_is_a_success() {
             // given
             Result<String, Integer> success = success("Hello");
-            Consumer<String> spiedConsumer = spyLambda(s -> {
-            }, Consumer.class);
+            Consumer<String> spiedConsumer = s -> {
+            };
 
             // when
             VoidResult<Integer> mapped = success.map(spiedConsumer);
 
             // then
             assertThat(mapped).isEqualTo(VoidResult.success());
+        }
+
+        @Test
+        @DisplayName("map (Consumer) should apply consumer when result is a success")
+        public void map_consumer_should_apply_consumer_when_result_is_a_success() {
+            // given
+            Result<String, Integer> success = success("Hello");
+            Consumer<String> spiedConsumer = spiedConsumer();
+
+            // when
+            success.map(spiedConsumer);
+
+            // then
             verify(spiedConsumer, once()).accept("Hello");
         }
 
@@ -245,15 +320,27 @@ class ResultTest {
         public void map_consumer_should_return_current_failure_when_result_is_a_failure() {
             // given
             Result<String, Integer> failure = failure(17);
-            Consumer<String> spiedConsumer = spyLambda(s -> {
-            }, Consumer.class);
+            Consumer<String> spiedConsumer = s -> {};
 
             // when
             VoidResult<Integer> mapped = failure.map(spiedConsumer);
 
             // then
             assertThat(mapped).isEqualTo(VoidResult.failure(17));
-            verify(spiedConsumer, never()).accept("Hello");
+        }
+
+        @Test
+        @DisplayName("map (Consumer) should return not execute consumer when result is a failure")
+        public void map_consumer_should_return_not_execute_consumer_when_result_is_a_failure() {
+            // given
+            Result<String, Integer> failure = failure(17);
+            Consumer<String> spiedConsumer = spiedConsumer();
+
+            // when
+            failure.map(spiedConsumer);
+
+            // then
+            verify(spiedConsumer, never()).accept(any());
         }
     }
 
@@ -531,8 +618,6 @@ class ResultTest {
     }
 
 
-
-
     @Nested
     @TestInstance(PER_CLASS)
     class Recover {
@@ -544,13 +629,13 @@ class ResultTest {
                     result.recover((Function<String, String>) null)
             );
         }
-        
+
         @Test
         @DisplayName("recover (Function) should return the initial success when current result is a success")
         public void recover_function_should_return_the_initial_success_when_current_result_is_a_success() {
             // given
             Result<String, String> result = Result.success("initial success");
-            
+
             // when
             String recovered = result.recover(s -> "should not be executed");
 
@@ -667,7 +752,6 @@ class ResultTest {
             // then
             verify(should_not_be_executed, never()).apply(any());
         }
-
 
 
         @ParameterizedTest(name = "tryRecovering (Function) should return the recovering function result when initial result is a failure : {0}")

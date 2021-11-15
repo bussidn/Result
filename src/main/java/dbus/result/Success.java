@@ -42,6 +42,11 @@ final class Success<S, F> implements Result<S, F> {
     }
 
     @Override
+    public <R> Result<R, F> map(Supplier<? extends R> mapper) {
+        return success(mapper.get());
+    }
+
+    @Override
     public VoidResult<F> map(Consumer<? super S> consumer) {
         consumer.accept(value);
         return VoidResult.success();
