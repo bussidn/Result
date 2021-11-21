@@ -52,6 +52,22 @@ public interface ResultFunction<T, S, F> extends Function<T, Result<S, F>> {
     }
 
     /**
+     * compose the current {@link ResultFunction} with a supplier
+     * <p>
+     * It applies the provided supplier after this.
+     *
+     * @param supplier the mapper to apply after this
+     * @param <R>    the new success return type
+     * @return a {@link ResultFunction} composing this and the mapper
+     * @throws NullPointerException when provided supplier is null
+     * @see Result#map(Supplier)
+     */
+    default <R> ResultFunction<T, R, F> map(Supplier<? extends R> supplier) {
+        requireNonNull(supplier);
+        return t -> this.apply(t).map(supplier);
+    }
+
+    /**
      * bridge function from {@link ResultFunction} to {@link VoidResultFunction}.
      * <p>
      * It applies the provided consumer after the current {@link ResultFunction}.

@@ -58,6 +58,7 @@ class ResultFunctionTest {
     class Map {
 
         @Test
+        @DisplayName("map (Function) should be provided with non null mapper")
         public void map_function_should_be_provided_with_non_null_mapper() {
             // given
             ResultFunction<String, String, String> resultFunction = Result::success;
@@ -69,16 +70,99 @@ class ResultFunctionTest {
         }
 
         @Test
-        public void map_function_should_be_compose_the_provided_mapper() {
+        @DisplayName("map (Function) composed function should execute provided mapper when initial result is a success")
+        public void map_function_composed_function_should_execute_provided_mapper_when_initial_result_is_a_success() {
             // given
-            ResultFunction<String, String, String> resultFunction = Result::success;
+            ResultFunction<String, String, String> successfulInitialFunction = Result::success;
             Function<String, Integer> mapper = String::length;
 
             // when
-            var composed = resultFunction.map(mapper);
+            var composed = successfulInitialFunction.map(mapper);
 
             // then
             assertThat(composed.apply("should be 12")).isEqualTo(success(12));
+        }
+
+        @Test
+        @DisplayName("map (Function) composed function should return initial result when initial result is a failure")
+        public void map_function_composed_function_should_return_initial_result_when_initial_result_is_a_failure() {
+            // given
+            ResultFunction<String, String, String> failingInitialFunction = Result::failure;
+            Function<String, Integer> mapper = String::length;
+
+            // when
+            var composed = failingInitialFunction.map(mapper);
+
+            // then
+            assertThat(composed.apply("should fail")).isEqualTo(Result.<String, String>failure("should fail"));
+        }
+
+        @Test
+        @DisplayName("map (Function) composed function should not execute provided mapper when initial result is a failure")
+        public void map_function_composed_function_should_not_execute_provided_mapper_when_initial_result_is_a_failure() {
+            // given
+            ResultFunction<String, String, String> failingInitialFunction = Result::failure;
+            Function<String, Integer> spiedFunction = spiedFunction(String::length);
+
+            // when
+            failingInitialFunction.map(spiedFunction);
+
+            // then
+            verify(spiedFunction, never()).apply(any());
+        }
+
+        @Test
+        @DisplayName("map (Supplier) should be provided with non null supplier")
+        public void map_supplier_should_be_provided_with_non_null_supplier() {
+            // given
+            ResultFunction<String, String, String> resultFunction = Result::success;
+
+            // then
+            assertThrows(NullPointerException.class, () ->
+                    resultFunction.map((Supplier<Integer>) null)
+            );
+        }
+
+        @Test
+        @DisplayName("map (Supplier) composed function should execute provided mapper when initial result is a success")
+        public void map_supplier_composed_function_should_execute_provided_mapper_when_initial_result_is_a_success() {
+            // given
+            ResultFunction<String, String, String> successfulInitialFunction = Result::success;
+            Supplier<Integer> mapper = () -> 17;
+
+            // when
+            var composed = successfulInitialFunction.map(mapper);
+
+            // then
+            assertThat(composed.apply("should be 17")).isEqualTo(success(17));
+        }
+
+        @Test
+        @DisplayName("map (Supplier) composed function should return initial result when initial result is a failure")
+        public void map_supplier_composed_function_should_return_initial_result_when_initial_result_is_a_failure() {
+            // given
+            ResultFunction<String, String, String> failingInitialFunction = Result::failure;
+            Supplier<String> mapper = () -> "should not matter";
+
+            // when
+            var result = failingInitialFunction.map(mapper);
+
+            // then
+            assertThat(result.apply("should fail")).isEqualTo(Result.<String, String>failure("should fail"));
+        }
+
+        @Test
+        @DisplayName("map (Supplier) composed function should not execute provided mapper when initial result is a failure")
+        public void map_supplier_composed_function_should_not_execute_provided_mapper_when_initial_result_is_a_failure() {
+            // given
+            ResultFunction<String, String, String> failingInitialFunction = Result::failure;
+            Supplier<Integer> spiedSupplier = spiedSupplier(() -> 5456);
+
+            // when
+            failingInitialFunction.map(spiedSupplier);
+
+            // then
+            verify(spiedSupplier, never()).get();
         }
 
         @Test
