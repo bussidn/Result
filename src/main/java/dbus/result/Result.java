@@ -2,9 +2,14 @@ package dbus.result;
 
 import dbus.result.void_.VoidResult;
 
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collector;
 
 /**
  * Class representing either a success or a failure.
@@ -214,4 +219,70 @@ public interface Result<S, F> {
      * @throws NullPointerException if provided recoveringFunction parameter is null
      */
     Result<S, F> tryRecovering(Supplier<? extends Result<? extends S, ? extends F>> recoveringSupplier);
+
+    /**
+     * creates a collector that helps to reduce a result stream into a single result
+     * <p>
+     * The original stream is basically split into successes and failures, then you can provide the reduction strategy
+     * function to reduce those results into a single result. <p>
+     * <p>
+     * {@link Results} contains static utility method to help create such a function : <p>
+     * * {@link Results#successIf(Predicate)} <P>
+     * * {@link Results#failureIf(Predicate)} <p>
+     * <p>
+     * that can both be combined with either of : <p>
+     * * {@link Results#anySuccess()} <p>
+     * * {@link Results#noSuccess()} <p>
+     * * {@link Results#anyFailure()} <p>
+     * * {@link Results#noFailure()} <p>
+     * <p>
+     * For example, you can decide that your result stream is a success if there is no failure with
+     * <p>
+     * <code> Results.successIf(Results.noFailure())</code>
+     * <p>
+     * or you can decide that your result stream is a failure if there is any failure
+     * <p>
+     * <code> Results.failureIf(Results.anyFailure())</code>
+     * <p>
+     * Or you can provide you own implementation, as all those parameters are Functions that can be provided in a lambda
+     * form.
+     *
+     * @param reductionStrategy function that is applied once all results have been collected
+     * @param <S>               the result stream success type
+     * @param <F>               the result stream failure type
+     * @param <NS>              the new success type
+     * @param <NF>              the new failure type
+     * @return the reduced result
+     */
+    static <S, F, NS, NF> Collector<Result<S, F>, ?, Result<NS, NF>>
+    collector(final Function<Results<S, F>, Result<NS, NF>> reductionStrategy) {
+
+        return new Collector<Result<S, F>, Results<S, F>, Result<NS, NF>>() {
+
+            @Override
+            public Supplier<Results<S, F>> supplier() {
+                return Results::new;
+            }
+
+            @Override
+            public BiConsumer<Results<S, F>, Result<S, F>> accumulator() {
+                return Results::add;
+            }
+
+            @Override
+            public BinaryOperator<Results<S, F>> combiner() {
+                return Results::addAll;
+            }
+
+            @Override
+            public Function<Results<S, F>, Result<NS, NF>> finisher() {
+                return reductionStrategy;
+            }
+
+            @Override
+            public Set<Characteristics> characteristics() {
+                return Set.of();
+            }
+        };
+    }
 }

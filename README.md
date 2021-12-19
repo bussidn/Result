@@ -42,6 +42,7 @@ This library intend to provide most of composition-generic-methods to easily com
   - ResultFunction (Function & Supplier)
   - VoidResult (Function & Supplier)
   - VoidResultFunction (Function & Supplier)
+- collect function (Results with reducing strategy)
   
 ### ToDo
 
@@ -56,6 +57,5 @@ This library intend to provide most of composition-generic-methods to easily com
 
 #### long term goals
 
-- Results (aggregation, reducing strategy, collect)
 - primitive results (intResult, doubleResult, etc.) ?
 - Observable with failure type ?

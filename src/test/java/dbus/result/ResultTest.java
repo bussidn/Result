@@ -13,14 +13,19 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 import org.mockito.verification.VerificationMode;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static dbus.result.MockitoLambdaSpying.*;
-import static dbus.result.Result.failure;
-import static dbus.result.Result.success;
+import static dbus.result.Result.*;
+import static dbus.result.Results.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -165,7 +170,7 @@ class ResultTest {
                 Arguments.of(Result.<Object, Number>success(new Object())),
                 Arguments.of(Result.<Object, Number>failure(12)),
                 Arguments.of(Result.<Object, Float>success("Object")),
-                Arguments.of(Result.failure(14.2f)),
+                Arguments.of(failure(14.2f)),
                 Arguments.of(Result.<String, Number>success("Success")),
                 Arguments.of(Result.<String, Number>failure(14546765L)),
                 Arguments.of(Result.<String, Integer>success("not an integer")),
@@ -320,7 +325,8 @@ class ResultTest {
         public void map_consumer_should_return_current_failure_when_result_is_a_failure() {
             // given
             Result<String, Integer> failure = failure(17);
-            Consumer<String> spiedConsumer = s -> {};
+            Consumer<String> spiedConsumer = s -> {
+            };
 
             // when
             VoidResult<Integer> mapped = failure.map(spiedConsumer);
@@ -364,7 +370,7 @@ class ResultTest {
                 Result<Integer, String> expectedResult
         ) {
             // given
-            Result<String, String> success = Result.success(initialSuccessValue);
+            Result<String, String> success = success(initialSuccessValue);
 
             // when
             Result<Integer, String> flatMappedResult = success.flatMap(boundFunction);
@@ -376,20 +382,20 @@ class ResultTest {
         @Test
         public void flatMap_function_should_return_the_initial_failure_when_initial_result_is_a_failure() {
             // given
-            Result<String, String> failure = Result.failure("already failed");
+            Result<String, String> failure = failure("already failed");
             Function<String, Result<Integer, String>> should_not_be_executed = s -> failure("should not be executed");
 
             // when
             Result<Integer, String> flatMappedResult = failure.flatMap(should_not_be_executed);
 
             // then
-            assertThat(flatMappedResult).isEqualTo(Result.failure("already failed"));
+            assertThat(flatMappedResult).isEqualTo(failure("already failed"));
         }
 
         @Test
         public void flatMap_function_should_not_execute_provided_bound_function_when_initial_result_is_a_failure() {
             // given
-            Result<String, String> failure = Result.failure("already failed");
+            Result<String, String> failure = failure("already failed");
             Function<String, Result<Integer, String>> should_not_be_executed = spiedFunction(s -> failure("should not be executed"));
 
             // when
@@ -415,7 +421,7 @@ class ResultTest {
                 Result<Integer, String> expectedResult
         ) {
             // given
-            Result<String, String> success = Result.success(initialSuccessValue);
+            Result<String, String> success = success(initialSuccessValue);
 
             // when
             Result<Integer, String> flatMappedResult = success.flatMap(boundSupplier);
@@ -427,20 +433,20 @@ class ResultTest {
         @Test
         public void flatMap_supplier_should_return_the_initial_failure_when_initial_result_is_a_failure() {
             // given
-            Result<String, String> failure = Result.failure("already failed");
+            Result<String, String> failure = failure("already failed");
             Supplier<Result<Integer, String>> should_not_be_executed = () -> failure("should not be executed");
 
             // when
             Result<Integer, String> flatMappedResult = failure.flatMap(should_not_be_executed);
 
             // then
-            assertThat(flatMappedResult).isEqualTo(Result.failure("already failed"));
+            assertThat(flatMappedResult).isEqualTo(failure("already failed"));
         }
 
         @Test
         public void flatMap_supplier_should_not_execute_provided_bound_supplier_when_initial_result_is_a_failure() {
             // given
-            Result<String, String> failure = Result.failure("already failed");
+            Result<String, String> failure = failure("already failed");
             Supplier<Result<Integer, String>> should_not_be_executed = spiedSupplier(() -> failure("should not be executed"));
 
             // when
@@ -453,24 +459,24 @@ class ResultTest {
         Stream<Arguments> boundFunction() {
             return Stream.of(
                     Arguments.of("initial success",
-                            (ResultFunction<String, Integer, String>) (String s) -> Result.success(s.length()),
-                            Result.success(15)
+                            (ResultFunction<String, Integer, String>) (String s) -> success(s.length()),
+                            success(15)
                     ),
                     Arguments.of("does not matter",
-                            (ResultFunction<String, Integer, String>) (String s) -> Result.failure("because"),
-                            Result.failure("because"))
+                            (ResultFunction<String, Integer, String>) (String s) -> failure("because"),
+                            failure("because"))
             );
         }
 
         Stream<Arguments> boundSupplier() {
             return Stream.of(
                     Arguments.of("initial success",
-                            (Supplier<Result<Integer, String>>) () -> Result.success(12),
-                            Result.success(12)
+                            (Supplier<Result<Integer, String>>) () -> success(12),
+                            success(12)
                     ),
                     Arguments.of("does not matter",
-                            (Supplier<Result<Integer, String>>) () -> Result.failure("because"),
-                            Result.failure("because"))
+                            (Supplier<Result<Integer, String>>) () -> failure("because"),
+                            failure("because"))
             );
         }
 
@@ -503,7 +509,7 @@ class ResultTest {
                     VoidResult<String> expectedResult
             ) {
                 // given
-                Result<String, String> success = Result.success(initialSuccessValue);
+                Result<String, String> success = success(initialSuccessValue);
 
                 // when
                 var flatMappedResult = success.flatMapToVoid(boundFunction);
@@ -527,7 +533,7 @@ class ResultTest {
             @Test
             public void flatMapToVoid_function_should_return_the_initial_failure_when_initial_result_is_a_failure() {
                 // given
-                Result<String, String> failure = Result.failure("already failed");
+                Result<String, String> failure = failure("already failed");
                 Function<String, VoidResult<String>> should_not_be_executed = s -> VoidResult.failure("should not be executed");
 
                 // when
@@ -540,7 +546,7 @@ class ResultTest {
             @Test
             public void flatMapToVoid_function_should_not_execute_provided_bound_function_when_initial_result_is_a_failure() {
                 // given
-                Result<String, String> failure = Result.failure("already failed");
+                Result<String, String> failure = failure("already failed");
                 Function<String, VoidResult<String>> should_not_be_executed = spiedFunction(s -> VoidResult.failure("should not be executed"));
 
                 // when
@@ -567,7 +573,7 @@ class ResultTest {
                     VoidResult<String> expectedResult
             ) {
                 // given
-                Result<String, String> success = Result.success(initialSuccessValue);
+                Result<String, String> success = success(initialSuccessValue);
 
                 // when
                 var flatMappedResult = success.flatMapToVoid(boundSupplier);
@@ -591,7 +597,7 @@ class ResultTest {
             @Test
             public void flatMapToVoid_supplier_should_return_the_initial_failure_when_initial_result_is_a_failure() {
                 // given
-                Result<String, String> failure = Result.failure("already failed");
+                Result<String, String> failure = failure("already failed");
                 Supplier<VoidResult<String>> should_not_be_executed = () -> VoidResult.failure("should not be executed");
 
                 // when
@@ -604,7 +610,7 @@ class ResultTest {
             @Test
             public void flatMapToVoid_supplier_should_not_execute_provided_bound_supplier_when_initial_result_is_a_failure() {
                 // given
-                Result<String, String> failure = Result.failure("already failed");
+                Result<String, String> failure = failure("already failed");
                 Supplier<VoidResult<String>> should_not_be_executed = spiedSupplier(() -> VoidResult.failure("should not be executed"));
 
                 // when
@@ -634,8 +640,7 @@ class ResultTest {
         @DisplayName("recover (Function) should return the initial success when current result is a success")
         public void recover_function_should_return_the_initial_success_when_current_result_is_a_success() {
             // given
-            Result<String, String> result = Result.success("initial success");
-
+            Result<String, String> result = success("initial success");
             // when
             String recovered = result.recover(s -> "should not be executed");
 
@@ -647,7 +652,7 @@ class ResultTest {
         @DisplayName("recover (Function) should not execute provided recovering function when initial result is a success")
         public void recover_function_should_not_execute_provided_recovering_function_when_initial_result_is_a_success() {
             // given
-            Result<String, String> result = Result.success("initial success");
+            Result<String, String> result = success("initial success");
             Function<String, String> should_not_be_executed = spiedFunction(s -> "should not be executed");
 
             // when
@@ -661,7 +666,7 @@ class ResultTest {
         @DisplayName("recover (Function) should return the new success when current result is a failure")
         public void recover_function_should_return_the_new_success_when_current_result_is_a_failure() {
             // given
-            Result<String, String> result = Result.failure("failed so badly but it does not matter !");
+            Result<String, String> result = failure("failed so badly but it does not matter !");
 
             // when
             String recovered = result.recover(s -> "new success");
@@ -682,7 +687,7 @@ class ResultTest {
         @DisplayName("recover (Supplier) should return the initial success when current result is a success")
         public void recover_supplier_should_return_the_initial_success_when_current_result_is_a_success() {
             // given
-            Result<String, String> result = Result.success("initial success");
+            Result<String, String> result = success("initial success");
 
             // when
             String recovered = result.recover(() -> "should not be executed");
@@ -695,7 +700,7 @@ class ResultTest {
         @DisplayName("recover (Supplier) should not execute provided recovering function when initial result is a success")
         public void recover_supplier_should_not_execute_provided_recovering_function_when_initial_result_is_a_success() {
             // given
-            Result<String, String> result = Result.success("initial success");
+            Result<String, String> result = success("initial success");
             Supplier<String> should_not_be_executed = spiedSupplier(() -> "should not be executed");
 
             // when
@@ -709,7 +714,7 @@ class ResultTest {
         @DisplayName("recover (Supplier) should return the new success when current result is a failure")
         public void recover_supplier_should_return_the_new_success_when_current_result_is_a_failure() {
             // given
-            Result<String, String> result = Result.failure("failed so badly but it does not matter !");
+            Result<String, String> result = failure("failed so badly but it does not matter !");
 
             // when
             String recovered = result.recover(() -> "new success");
@@ -730,21 +735,21 @@ class ResultTest {
         @DisplayName("tryRecovering (Function) should return the initial success when current result is a success")
         public void tryRecovering_function_should_return_the_initial_success_when_current_result_is_a_success() {
             // given
-            Result<String, String> result = Result.success("initial success");
+            Result<String, String> result = success("initial success");
 
             // when
-            var recovered = result.tryRecovering(s -> Result.success("should not be executed"));
+            var recovered = result.tryRecovering(s -> success("should not be executed"));
 
             // then
-            assertThat(recovered).isEqualTo(Result.success("initial success"));
+            assertThat(recovered).isEqualTo(success("initial success"));
         }
 
         @Test
         @DisplayName("tryRecovering (Function) should not execute provided recovering function when initial result is a success")
         public void tryRecovering_function_should_not_execute_provided_recovering_function_when_initial_result_is_a_success() {
             // given
-            Result<String, String> result = Result.success("initial success");
-            Function<String, Result<String, String>> should_not_be_executed = spiedFunction(s -> Result.success("should not be executed"));
+            Result<String, String> result = success("initial success");
+            Function<String, Result<String, String>> should_not_be_executed = spiedFunction(s -> success("should not be executed"));
 
             // when
             result.tryRecovering(should_not_be_executed);
@@ -760,7 +765,7 @@ class ResultTest {
                 final Result<String, String> recoveringFunctionResult
         ) {
             // given
-            Result<String, String> result = Result.failure("failed so badly but it does not matter !");
+            Result<String, String> result = failure("failed so badly but it does not matter !");
 
             // when
             var recovered = result.tryRecovering(s -> recoveringFunctionResult);
@@ -781,21 +786,21 @@ class ResultTest {
         @DisplayName("tryRecovering (Supplier) should return the initial success when current result is a success")
         public void tryRecovering_supplier_should_return_the_initial_success_when_current_result_is_a_success() {
             // given
-            Result<String, String> result = Result.success("initial success");
+            Result<String, String> result = success("initial success");
 
             // when
-            var recovered = result.tryRecovering(() -> Result.success("should not be executed"));
+            var recovered = result.tryRecovering(() -> success("should not be executed"));
 
             // then
-            assertThat(recovered).isEqualTo(Result.success("initial success"));
+            assertThat(recovered).isEqualTo(success("initial success"));
         }
 
         @Test
         @DisplayName("tryRecovering (Supplier) should not execute provided recovering function when initial result is a success")
         public void tryRecovering_supplier_should_not_execute_provided_recovering_function_when_initial_result_is_a_success() {
             // given
-            Result<String, String> result = Result.success("initial success");
-            Supplier<Result<String, String>> should_not_be_executed = spiedSupplier(() -> Result.success("should not be executed"));
+            Result<String, String> result = success("initial success");
+            Supplier<Result<String, String>> should_not_be_executed = spiedSupplier(() -> success("should not be executed"));
 
             // when
             result.tryRecovering(should_not_be_executed);
@@ -810,7 +815,7 @@ class ResultTest {
                 final Result<String, String> recoveringSupplierResult
         ) {
             // given
-            Result<String, String> result = Result.failure("failed so badly but it does not matter !");
+            Result<String, String> result = failure("failed so badly but it does not matter !");
 
             // when
             var recovered = result.tryRecovering(() -> recoveringSupplierResult);
@@ -821,6 +826,397 @@ class ResultTest {
 
         Stream<Arguments> successAndFailure() {
             return ResultTest.successAndFailure();
+        }
+    }
+
+
+    @Nested
+    @DisplayName("collect")
+    class Collect {
+
+        @Nested
+        @DisplayName("success if")
+        class SuccessIf {
+
+            @Nested
+            @DisplayName("any success")
+            class AnySuccess {
+
+                @Test
+                @DisplayName("should collect successes when any success")
+                public void collect_successIf_anySuccess_should_collect_successes_when_result_stream_contains_any_success() {
+                    // given
+                    Stream<Result<String, Integer>> resultStream = Stream.of(
+                            success("success 1"),
+                            failure(1),
+                            failure(2),
+                            success("success 2"),
+                            success("success 3")
+                    );
+
+                    // when
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(successIf(anySuccess())));
+
+                    // then
+                    assertThat(results).isEqualTo(success(List.of("success 1", "success 2", "success 3")));
+                }
+
+                @Test
+                @DisplayName("should collect failures when no success")
+                public void collect_successIf_anySuccess_should_collect_failures_when_result_stream_does_not_contain_any_success() {
+                    // given
+                    Stream<Result<String, Integer>> resultStream = Stream.of(
+                            failure(1),
+                            failure(2)
+                    );
+
+                    // when
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(successIf(anySuccess())));
+
+                    // then
+                    assertThat(results).isEqualTo(Result.failure(List.of(1, 2)));
+                }
+            }
+
+            @Nested
+            @DisplayName("no success")
+            class NoSuccess {
+
+                @Test
+                @DisplayName("should collect successes when no success")
+                public void collect_successIf_noSuccess_should_collect_successes_when_result_stream_does_not_contain_any_success() {
+                    // given
+                    Stream<Result<String, Integer>> resultStream = Stream.of(
+                            failure(1),
+                            failure(2)
+                    );
+
+                    // when
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(successIf(noSuccess())));
+
+                    // then
+                    assertThat(results).isEqualTo(success(List.of()));
+                }
+
+                @Test
+                @DisplayName("should collect failures when any success")
+                public void collect_successIf_noSuccess_should_collect_failures_when_result_stream_contains_any_success() {
+                    // given
+                    Stream<Result<String, Integer>> resultStream = Stream.of(
+                            failure(1),
+                            failure(2),
+                            success("any success")
+                    );
+
+                    // when
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(successIf(noSuccess())));
+
+                    // then
+                    assertThat(results).isEqualTo(Result.failure(List.of(1, 2)));
+                }
+            }
+
+            @Nested
+            @DisplayName("no failure")
+            class NoFailure {
+
+                @Test
+                @DisplayName("should collect successes when no failure")
+                public void collect_successIf_noFailure_should_collect_successes_when_result_stream_does_not_contain_any_failure() {
+                    // given
+                    Stream<Result<String, Integer>> resultStream = Stream.of(
+                            success("success 1"),
+                            success("success 2"),
+                            success("success 3")
+                    );
+
+                    // when
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(successIf(noFailure())));
+
+                    // then
+                    assertThat(results).isEqualTo(success(List.of("success 1", "success 2", "success 3")));
+                }
+
+                @Test
+                @DisplayName("should collect failures when any failure")
+                public void collect_successIf_noFailure_should_collect_failures_when_result_stream_contains_any_failure() {
+                    // given
+                    Stream<Result<String, Integer>> resultStream = Stream.of(
+                            success("success 1"),
+                            success("success 2"),
+                            success("success 3"),
+                            failure(54)
+                    );
+
+                    // when
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(successIf(noFailure())));
+
+                    // then
+                    assertThat(results).isEqualTo(failure(List.of(54)));
+                }
+            }
+
+            @Nested
+            @DisplayName("any failure")
+            class AnyFailure {
+
+                @Test
+                @DisplayName("should collect successes when any failure")
+                public void collect_successIf_anyFailure_should_collect_successes_when_result_stream_contains_any_failure() {
+                    // given
+                    Stream<Result<String, Integer>> resultStream = Stream.of(
+                            success("success 1"),
+                            success("success 2"),
+                            success("success 3"),
+                            failure(98)
+                    );
+
+                    // when
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(successIf(anyFailure())));
+
+                    // then
+                    assertThat(results).isEqualTo(success(List.of("success 1", "success 2", "success 3")));
+                }
+
+                @Test
+                @DisplayName("should collect failures when no failure")
+                public void collect_successIf_anyFailure_should_collect_failures_when_result_stream_does_not_contain_any_failure() {
+                    // given
+                    Stream<Result<String, Integer>> resultStream = Stream.of(
+                            success("success 1"),
+                            success("success 2"),
+                            success("success 3")
+                    );
+
+                    // when
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(successIf(anyFailure())));
+
+                    // then
+                    assertThat(results).isEqualTo(failure(List.of()));
+                }
+            }
+        }
+
+        @Nested
+        @DisplayName("failure if")
+        class FailureIf {
+
+            @Nested
+            @DisplayName("any success")
+            class AnySuccess {
+
+                @Test
+                @DisplayName("should collect failures when any success")
+                public void collect_failureIf_anySuccess_should_collect_failures_when_result_stream_contains_any_success() {
+                    // given
+                    Stream<Result<String, Integer>> resultStream = Stream.of(
+                            success("success 1"),
+                            failure(1),
+                            failure(2),
+                            success("success 2"),
+                            success("success 3")
+                    );
+
+                    // when
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(failureIf(anySuccess())));
+
+                    // then
+                    assertThat(results).isEqualTo(failure(List.of(1, 2)));
+                }
+
+                @Test
+                @DisplayName("should collect successes when no success")
+                public void collect_failureIf_anySuccess_should_collect_successes_when_result_stream_does_not_contain_any_success() {
+                    // given
+                    Stream<Result<String, Integer>> resultStream = Stream.of(
+                            failure(1),
+                            failure(2)
+                    );
+
+                    // when
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(failureIf(anySuccess())));
+
+                    // then
+                    assertThat(results).isEqualTo(success(List.of()));
+                }
+            }
+
+            @Nested
+            @DisplayName("no success")
+            class NoSuccess {
+
+                @Test
+                @DisplayName("should collect failures when no success")
+                public void collect_failureIf_noSuccess_should_collect_failures_when_result_stream_does_not_contain_any_success() {
+                    // given
+                    Stream<Result<String, Integer>> resultStream = Stream.of(
+                            failure(1),
+                            failure(2)
+                    );
+
+                    // when
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(failureIf(noSuccess())));
+
+                    // then
+                    assertThat(results).isEqualTo(failure(List.of(1, 2)));
+                }
+
+                @Test
+                @DisplayName("should collect successes when any success")
+                public void collect_failureIf_noSuccess_should_collect_failures_when_result_stream_contains_any_success() {
+                    // given
+                    Stream<Result<String, Integer>> resultStream = Stream.of(
+                            failure(1),
+                            failure(2),
+                            success("any success"),
+                            success("any other success")
+                    );
+
+                    // when
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(failureIf(noSuccess())));
+
+                    // then
+                    assertThat(results).isEqualTo(success(List.of("any success", "any other success")));
+                }
+            }
+
+            @Nested
+            @DisplayName("no failure")
+            class NoFailure {
+
+                @Test
+                @DisplayName("should collect failures when no failure")
+                public void collect_failureIf_noFailure_should_collect_failures_when_result_stream_does_not_contain_any_failure() {
+                    // given
+                    Stream<Result<String, Integer>> resultStream = Stream.of(
+                            success("success 1"),
+                            success("success 2"),
+                            success("success 3")
+                    );
+
+                    // when
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(failureIf(noFailure())));
+
+                    // then
+                    assertThat(results).isEqualTo(failure(List.of()));
+                }
+
+                @Test
+                @DisplayName("should collect successes when any failure")
+                public void collect_failureIf_noFailure_should_collect_successes_when_result_stream_contains_any_failure() {
+                    // given
+                    Stream<Result<String, Integer>> resultStream = Stream.of(
+                            success("success 1"),
+                            success("success 2"),
+                            success("success 3"),
+                            failure(54)
+                    );
+
+                    // when
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(failureIf(noFailure())));
+
+                    // then
+                    assertThat(results).isEqualTo(success(List.of("success 1", "success 2", "success 3")));
+                }
+            }
+
+            @Nested
+            @DisplayName("any failure")
+            class AnyFailure {
+
+                @Test
+                @DisplayName("should collect failures when any failure")
+                public void collect_failureIf_anyFailure_should_collect_failures_when_result_stream_contains_any_failure() {
+                    // given
+                    Stream<Result<String, Integer>> resultStream = Stream.of(
+                            success("success 1"),
+                            success("success 2"),
+                            success("success 3"),
+                            failure(98),
+                            failure(703)
+                    );
+
+                    // when
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(failureIf(anyFailure())));
+
+                    // then
+                    assertThat(results).isEqualTo(failure(List.of(98, 703)));
+                }
+
+                @Test
+                @DisplayName("should collect successes when no failure")
+                public void collect_failureIf_anyFailure_should_collect_failures_when_result_stream_does_not_contain_any_failure() {
+                    // given
+                    Stream<Result<String, Integer>> resultStream = Stream.of(
+                            success("success 1"),
+                            success("success 2"),
+                            success("success 3")
+                    );
+
+                    // when
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.parallel().collect(collector(failureIf(anyFailure())));
+
+                    // then
+                    assertThat(results).isEqualTo(success(List.of("success 1", "success 2", "success 3")));
+                }
+
+                @Test
+                @DisplayName("should collect successes before failures when provided custom reduction function")
+                public void should_collect_successes_before_failures_when_provided_custom_reduction_function() {
+                    // given
+                    Stream<Result<String, String>> resultStream = Stream.of(
+                            success("success 1"),
+                            failure("failure 1"),
+                            success("success 2"),
+                            failure("failure 2"),
+                            failure("failure 3"),
+                            success("success 3")
+                    );
+                    Function<Results<String, String>, Result<List<String>, Collection<String>>> successesBeforeFailures =
+                            r -> {
+                                var all = new ArrayList<>(r.successes());
+                                all.addAll(r.failures());
+                                return success(all);
+                            };
+
+                    // when
+                    Result<List<String>, Collection<String>> results = resultStream.parallel()
+                            .collect(collector(successesBeforeFailures));
+
+                    // then
+                    assertThat(results)
+                            .isEqualTo(success(List.of(
+                                    "success 1", "success 2", "success 3",
+                                    "failure 1", "failure 2", "failure 3"
+                            )));
+                }
+
+                @Test
+                @DisplayName("should collect all string lengths when provided custom reduction function")
+                public void should_collect_all_string_length_when_provided_custom_reduction_function() {
+                    // given
+                    Stream<Result<String, String>> resultStream = Stream.of(
+                            success("should be 12"),
+                            failure("this should be 17"),
+                            success("this one is 14"),
+                            failure("length here should be 24")
+                    );
+                    Function<Results<String, String>, Result<Set<Number>, Set<Number>>> successesBeforeFailures =
+                            r -> {
+                                var all = new ArrayList<>(r.successes());
+                                all.addAll(r.failures());
+                                return failure(all.stream().map(String::length).collect(Collectors.toSet()));
+                            };
+
+                    // when
+                    Result<Set<Number>, Set<Number>> results = resultStream.parallel()
+                            .collect(collector(successesBeforeFailures));
+
+                    // then
+                    assertThat(results)
+                            .isEqualTo(failure(Set.of(12, 17,14, 24)));
+                }
+            }
         }
     }
 
