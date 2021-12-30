@@ -348,6 +348,54 @@ class ResultTest {
             // then
             verify(spiedConsumer, never()).accept(any());
         }
+
+        @ParameterizedTest(name = "mapFailure (Function) should not accept null parameter when result is {0}")
+        @MethodSource("successAndFailure")
+        public void mapFailure_function_should_not_accept_null_parameter(Result<String, Integer> result) {
+            assertThrows(NullPointerException.class, () ->
+                    result.mapFailure((Function<Integer, String>) null)
+            );
+        }
+
+        @Test
+        @DisplayName("mapFailure (Function) should apply mapper when result is a failure")
+        public void mapFailure_function_should_apply_mapper_when_result_is_a_failure() {
+            // given
+            Result<String, Integer> failure = failure(3);
+
+            // when
+            Result<String, String> mapped = failure.mapFailure(i -> Stream.generate(() -> "a").limit(i).reduce("", String::concat));
+
+            // then
+            assertThat(mapped).isEqualTo(failure("aaa"));
+        }
+
+        @Test
+        @DisplayName("mapFailure (Function) should return current success when result is a success")
+        public void mapFailure_function_should_return_current_success_when_result_is_a_success() {
+            // given
+            Result<String, Integer> failure = success("should be preserved");
+
+            // when
+            Result<String, Integer> mapped = failure.mapFailure(i -> i + 14);
+
+            // then
+            assertThat(mapped).isEqualTo(success("should be preserved"));
+        }
+
+        @Test
+        @DisplayName("mapFailure (Function) should not apply mapper when result is a success")
+        public void mapFailure_function_should_not_apply_mapper_when_result_is_a_success() {
+            // given
+            Result<String, Integer> success = success("this is indubitably a a success");
+            Function<Integer, Integer> spiedMapper = spiedFunction(i -> i);
+
+            // when
+            success.mapFailure(spiedMapper);
+
+            // then
+            verify(spiedMapper, never()).apply(any());
+        }
     }
 
     @Nested

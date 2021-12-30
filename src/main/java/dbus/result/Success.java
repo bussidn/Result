@@ -35,6 +35,11 @@ final class Success<S, F> implements Result<S, F> {
         return success.apply(value);
     }
 
+    private <ANY> Result<S, ANY> cast() {
+        //noinspection unchecked
+        return (Result<S, ANY>) this;
+    }
+
     @Override
     public <R> Result<R, F> map(Function<? super S, ? extends R> mapper) {
         Objects.requireNonNull(mapper);
@@ -50,6 +55,12 @@ final class Success<S, F> implements Result<S, F> {
     public VoidResult<F> map(Consumer<? super S> consumer) {
         consumer.accept(value);
         return VoidResult.success();
+    }
+
+    @Override
+    public <G> Result<S, G> mapFailure(Function<? super F, ? extends G> mapper) {
+        requireNonNull(mapper);
+        return this.cast();
     }
 
     @Override
