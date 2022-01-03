@@ -43,13 +43,13 @@ This library intend to provide most of composition-generic-methods to easily com
   - VoidResult (Function & Supplier)
   - VoidResultFunction (Function & Supplier)
 - collect function (Results with reducing strategy)
-- mapFailure (([Function, Supplier, Consumer] <*> [Result])
+- mapFailure (([Function, Supplier, Consumer] <*> [Result, ResultFunction])
   
 ### ToDo
 
 #### V.1 ?
 
-- mapFailure ([Function, Supplier, Consumer] <*> [ResultFunction, VoidResult, VoidResultFunction])
+- mapFailure ([Function, Supplier, Consumer] <*> [VoidResult, VoidResultFunction])
 - bridge functions (toVoidResult, toVoidResultFunction, toVoid ?)
 - structure helpers (from boolean & predicate)
 - aggregation methods

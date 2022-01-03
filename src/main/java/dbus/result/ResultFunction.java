@@ -3,6 +3,7 @@ package dbus.result;
 import dbus.result.void_.VoidResult;
 import dbus.result.void_.VoidResultFunction;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -36,7 +37,7 @@ public interface ResultFunction<T, S, F> extends Function<T, Result<S, F>> {
     }
 
     /**
-     * compose the current {@link ResultFunction} with a success mapping function
+     * compose the success side of the current {@link ResultFunction} with a success mapping function
      * <p>
      * It applies the provided mapper after this.
      *
@@ -52,12 +53,12 @@ public interface ResultFunction<T, S, F> extends Function<T, Result<S, F>> {
     }
 
     /**
-     * compose the current {@link ResultFunction} with a supplier
+     * compose the success side of the current {@link ResultFunction} with a supplier
      * <p>
      * It applies the provided supplier after this.
      *
      * @param supplier the mapper to apply after this
-     * @param <R>    the new success return type
+     * @param <R>      the new success return type
      * @return a {@link ResultFunction} composing this and the mapper
      * @throws NullPointerException when provided supplier is null
      * @see Result#map(Supplier)
@@ -68,7 +69,7 @@ public interface ResultFunction<T, S, F> extends Function<T, Result<S, F>> {
     }
 
     /**
-     * bridge function from {@link ResultFunction} to {@link VoidResultFunction}.
+     * compose the failure side of the current {@link ResultFunction} with a consumer
      * <p>
      * It applies the provided consumer after the current {@link ResultFunction}.
      *
@@ -83,13 +84,60 @@ public interface ResultFunction<T, S, F> extends Function<T, Result<S, F>> {
     }
 
     /**
+     * compose the failure side of the current {@link ResultFunction} with a failure mapping function.
+     * <p>
+     * It applies the provided mapper after this.
+     *
+     * @param mapper the mapper to apply after this
+     * @param <R>    the new failure return type
+     * @return a {@link ResultFunction} composing this and the mapper
+     * @throws NullPointerException when provided mapper is null
+     * @see Result#mapFailure(Function)
+     */
+    default <R> ResultFunction<T, S, R> mapFailure(Function<? super F, ? extends R> mapper) {
+        requireNonNull(mapper);
+        return t -> this.apply(t).mapFailure(mapper);
+    }
+
+    /**
+     * compose the failure side of the current {@link ResultFunction} with a supplier.
+     * <p>
+     * It applies the provided supplier after this.
+     *
+     * @param supplier the mapper to apply after this
+     * @param <R>      the new failure return type
+     * @return a {@link ResultFunction} composing this and the mapper
+     * @throws NullPointerException when provided supplier is null
+     * @see Result#mapFailure(Supplier)
+     */
+    default <R> ResultFunction<T, S, R> mapFailure(Supplier<? extends R> supplier) {
+        requireNonNull(supplier);
+        return t -> this.apply(t).mapFailure(supplier);
+    }
+
+    /**
+     * compose the failure side of the current {@link ResultFunction} with a consumer.
+     * <p>
+     * It applies the provided consumer after the current {@link ResultFunction}.
+     *
+     * @param consumer the consumer to apply after this
+     * @return a {@link VoidResultFunction} composing this and the provided consumer
+     * @throws NullPointerException when provided consumer is null
+     * @see Result#map(Consumer)
+     */
+    default Function<T, Optional<S>> mapFailure(Consumer<? super F> consumer) {
+        requireNonNull(consumer);
+        return t -> this.apply(t).mapFailure(consumer);
+    }
+
+    /**
      * Result monad bind function applied to a function
      * <p>
      * compose the provided bound function to the current result function.
      *
      * @param bound the function to compose current function with
      * @param <R>   the new success type
-     * @return  a result function composing this with the bound function.
+     * @return a result function composing this with the bound function.
      * @throws NullPointerException if provided bound parameter is null
      */
     default <R> ResultFunction<T, R, F> flatMap(Function<? super S, ? extends Result<? extends R, ? extends F>> bound) {
@@ -104,7 +152,7 @@ public interface ResultFunction<T, S, F> extends Function<T, Result<S, F>> {
      *
      * @param bound the supplier to compose current function with
      * @param <R>   the new success type
-     * @return  a result function composing this with the bound supplier.
+     * @return a result function composing this with the bound supplier.
      * @throws NullPointerException if provided bound parameter is null
      */
     default <R> ResultFunction<T, R, F> flatMap(Supplier<? extends Result<? extends R, ? extends F>> bound) {
@@ -118,7 +166,7 @@ public interface ResultFunction<T, S, F> extends Function<T, Result<S, F>> {
      * compose the provided bound function to the current function.
      *
      * @param bound the function to compose current function with
-     * @return  a void result returning function composing this with the bound function.
+     * @return a void result returning function composing this with the bound function.
      * @throws NullPointerException if provided bound parameter is null
      */
     default VoidResultFunction<T, F> flatMapToVoid(Function<? super S, ? extends VoidResult<? extends F>> bound) {
@@ -132,7 +180,7 @@ public interface ResultFunction<T, S, F> extends Function<T, Result<S, F>> {
      * compose the provided bound supplier to the current function.
      *
      * @param bound the supplier to compose current function with
-     * @return  a void result returning function composing this with the bound supplier.
+     * @return a void result returning function composing this with the bound supplier.
      * @throws NullPointerException if provided bound parameter is null
      */
     default VoidResultFunction<T, F> flatMapToVoid(Supplier<? extends VoidResult<? extends F>> bound) {
