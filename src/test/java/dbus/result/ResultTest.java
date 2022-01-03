@@ -396,6 +396,54 @@ class ResultTest {
             // then
             verify(spiedMapper, never()).apply(any());
         }
+
+        @ParameterizedTest(name = "mapFailure (Supplier) should not accept null parameter when result is {0}")
+        @MethodSource("successAndFailure")
+        public void mapFailure_Supplier_should_not_accept_null_parameter(Result<String, Integer> result) {
+            assertThrows(NullPointerException.class, () ->
+                    result.mapFailure((Supplier<String>) null)
+            );
+        }
+
+        @Test
+        @DisplayName("mapFailure (Supplier) should apply mapper when result is a failure")
+        public void mapFailure_supplier_should_apply_mapper_when_result_is_a_failure() {
+            // given
+            Result<String, Integer> failure = failure(3);
+
+            // when
+            Result<String, String> mapped = failure.mapFailure(() -> "created");
+
+            // then
+            assertThat(mapped).isEqualTo(failure("created"));
+        }
+
+        @Test
+        @DisplayName("mapFailure (Supplier) should return current success when result is a success")
+        public void mapFailure_supplier_should_return_current_success_when_result_is_a_success() {
+            // given
+            Result<String, Integer> failure = success("should be preserved");
+
+            // when
+            Result<String, Integer> mapped = failure.mapFailure(() -> 41);
+
+            // then
+            assertThat(mapped).isEqualTo(success("should be preserved"));
+        }
+
+        @Test
+        @DisplayName("mapFailure (Supplier) should not apply mapper when result is a success")
+        public void mapFailure_supplier_should_not_apply_mapper_when_result_is_a_success() {
+            // given
+            Result<String, Integer> success = success("this is indubitably a a success");
+            Supplier<Number> spiedMapper = spiedSupplier(() -> 15.42);
+
+            // when
+            success.mapFailure(spiedMapper);
+
+            // then
+            verify(spiedMapper, never()).get();
+        }
     }
 
     @Nested

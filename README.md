@@ -43,7 +43,7 @@ This library intend to provide most of composition-generic-methods to easily com
   - VoidResult (Function & Supplier)
   - VoidResultFunction (Function & Supplier)
 - collect function (Results with reducing strategy)
-- mapFailure (([Function] <*> [Result])
+- mapFailure (([Function, Supplier] <*> [Result])
   
 ### ToDo
 

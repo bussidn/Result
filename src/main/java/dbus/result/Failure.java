@@ -63,6 +63,11 @@ final class Failure<S, F> implements Result<S, F> {
     }
 
     @Override
+    public <G> Result<S, G> mapFailure(Supplier<? extends G> mapper) {
+        return new Failure<>(mapper.get());
+    }
+
+    @Override
     public <R> Result<R, F> flatMap(Function<? super S, ? extends Result<? extends R, ? extends F>> bound) {
         requireNonNull(bound);
         return this.cast();

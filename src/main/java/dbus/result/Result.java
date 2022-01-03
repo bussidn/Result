@@ -134,6 +134,19 @@ public interface Result<S, F> {
     <G> Result<S, G> mapFailure(Function<? super F, ? extends G> mapper);
 
     /**
+     * Result bifunctor map function.
+     * <p>
+     * It executes the provided mapper if this is a failure and keep the provided value as the new failure.
+     * Returns the current success otherwise.
+     *
+     * @param mapper the mapper to apply to the failure
+     * @param <G>    the new success return type
+     * @return a Result containing either the current success or a supplied failure
+     * @throws NullPointerException when provided mapper is null
+     */
+    <G> Result<S, G> mapFailure(Supplier<? extends G> mapper);
+
+    /**
      * Result monad bind function
      * <p>
      * compose the provided bound function to the current success if any.
