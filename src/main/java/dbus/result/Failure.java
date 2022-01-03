@@ -4,6 +4,7 @@ import dbus.result.void_.VoidResult;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -65,6 +66,12 @@ final class Failure<S, F> implements Result<S, F> {
     @Override
     public <G> Result<S, G> mapFailure(Supplier<? extends G> mapper) {
         return new Failure<>(mapper.get());
+    }
+
+    @Override
+    public Optional<S> mapFailure(Consumer<? super F> consumer) {
+        consumer.accept(value);
+        return Optional.empty();
     }
 
     @Override

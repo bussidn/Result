@@ -13,10 +13,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 import org.mockito.verification.VerificationMode;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -296,11 +293,9 @@ class ResultTest {
         public void map_consumer_should_return_void_success_when_result_is_a_success() {
             // given
             Result<String, Integer> success = success("Hello");
-            Consumer<String> spiedConsumer = s -> {
-            };
 
             // when
-            VoidResult<Integer> mapped = success.map(spiedConsumer);
+            VoidResult<Integer> mapped = success.map(s -> {});
 
             // then
             assertThat(mapped).isEqualTo(VoidResult.success());
@@ -325,11 +320,9 @@ class ResultTest {
         public void map_consumer_should_return_current_failure_when_result_is_a_failure() {
             // given
             Result<String, Integer> failure = failure(17);
-            Consumer<String> spiedConsumer = s -> {
-            };
 
             // when
-            VoidResult<Integer> mapped = failure.map(spiedConsumer);
+            VoidResult<Integer> mapped = failure.map(s -> {});
 
             // then
             assertThat(mapped).isEqualTo(VoidResult.failure(17));
@@ -364,7 +357,7 @@ class ResultTest {
             Result<String, Integer> failure = failure(3);
 
             // when
-            Result<String, String> mapped = failure.mapFailure(i -> Stream.generate(() -> "a").limit(i).reduce("", String::concat));
+            Result<String, String> mapped = failure.mapFailure((Function<? super Integer, String>) i -> Stream.generate(() -> "a").limit(i).reduce("", String::concat));
 
             // then
             assertThat(mapped).isEqualTo(failure("aaa"));
@@ -399,7 +392,7 @@ class ResultTest {
 
         @ParameterizedTest(name = "mapFailure (Supplier) should not accept null parameter when result is {0}")
         @MethodSource("successAndFailure")
-        public void mapFailure_Supplier_should_not_accept_null_parameter(Result<String, Integer> result) {
+        public void mapFailure_supplier_should_not_accept_null_parameter(Result<String, Integer> result) {
             assertThrows(NullPointerException.class, () ->
                     result.mapFailure((Supplier<String>) null)
             );
@@ -443,6 +436,54 @@ class ResultTest {
 
             // then
             verify(spiedMapper, never()).get();
+        }
+
+        @ParameterizedTest(name = "mapFailure (Consumer) should not accept null parameter when result is {0}")
+        @MethodSource("successAndFailure")
+        public void mapFailure_consumer_should_not_accept_null_parameter(Result<String, Integer> result) {
+            assertThrows(NullPointerException.class, () ->
+                    result.mapFailure((Consumer<? super Integer>) null)
+            );
+        }
+
+        @Test
+        @DisplayName("mapFailure (Consumer) should apply mapper when result is a failure")
+        public void mapFailure_consumer_should_apply_mapper_when_result_is_a_failure() {
+            // given
+            Result<String, Integer> failure = failure(3);
+
+            // when
+            Optional<String> mapped = failure.mapFailure(i -> {});
+
+            // then
+            assertThat(mapped).isEqualTo(Optional.empty());
+        }
+
+        @Test
+        @DisplayName("mapFailure (Consumer) should return current success when result is a success")
+        public void mapFailure_consumer_should_return_current_success_when_result_is_a_success() {
+            // given
+            Result<String, Integer> failure = success("should be preserved");
+
+            // when
+            Optional<String> mapped = failure.mapFailure(i -> {});
+
+            // then
+            assertThat(mapped).isEqualTo(Optional.of("should be preserved"));
+        }
+
+        @Test
+        @DisplayName("mapFailure (Consumer) should not apply mapper when result is a success")
+        public void mapFailure_consumer_should_not_apply_mapper_when_result_is_a_success() {
+            // given
+            Result<String, Integer> success = success("this is indubitably a a success");
+            Consumer<Number> spiedConsumer = spiedConsumer();
+
+            // when
+            success.mapFailure(spiedConsumer);
+
+            // then
+            verify(spiedConsumer, never()).accept(any());
         }
     }
 

@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -67,6 +68,12 @@ final class Success<S, F> implements Result<S, F> {
     public <G> Result<S, G> mapFailure(Supplier<? extends G> mapper) {
         requireNonNull(mapper);
         return this.cast();
+    }
+
+    @Override
+    public Optional<S> mapFailure(Consumer<? super F> consumer) {
+        requireNonNull(consumer);
+        return Optional.of(value);
     }
 
     @Override

@@ -2,13 +2,9 @@ package dbus.result;
 
 import dbus.result.void_.VoidResult;
 
+import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.BinaryOperator;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.*;
 import java.util.stream.Collector;
 
 /**
@@ -145,6 +141,18 @@ public interface Result<S, F> {
      * @throws NullPointerException when provided mapper is null
      */
     <G> Result<S, G> mapFailure(Supplier<? extends G> mapper);
+
+    /**
+     * bridge function from Result to Optional
+     * <p>
+     * It applies the provided consumer to the failure value if this is a failure.
+     * Returns the current success otherwise as an Optional.
+     *
+     * @param consumer the consumer to apply to the failure
+     * @return an Optional containing maybe the success
+     * @throws NullPointerException when provided consumer is null
+     */
+    Optional<S> mapFailure(Consumer<? super F> consumer);
 
     /**
      * Result monad bind function
