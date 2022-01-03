@@ -50,7 +50,6 @@ This library intend to provide most of composition-generic-methods to easily com
 #### V.1 ?
 
 - mapFailure ([Function, Supplier, Consumer] <*> [ResultFunction, VoidResult, VoidResultFunction])
-  - should ([Consumer] x [Result]) exist ?
 - bridge functions (toVoidResult, toVoidResultFunction, toVoid ?)
 - structure helpers (from boolean & predicate)
 - aggregation methods

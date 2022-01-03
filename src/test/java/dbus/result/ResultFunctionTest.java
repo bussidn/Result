@@ -19,10 +19,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static dbus.result.MockitoLambdaSpying.spiedFunction;
-import static dbus.result.MockitoLambdaSpying.spiedSupplier;
+import static dbus.result.MockitoLambdaSpying.*;
 import static dbus.result.Result.success;
-import static dbus.result.void_.VoidResult.failure;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
@@ -166,6 +164,7 @@ class ResultFunctionTest {
         }
 
         @Test
+        @DisplayName("map (Consumer) should be provided with non null consumer")
         public void map_consumer_should_be_provided_with_non_null_consumer() {
             // given
             ResultFunction<String, String, String> resultFunction = Result::success;
@@ -177,17 +176,45 @@ class ResultFunctionTest {
         }
 
         @Test
-        public void map_consumer_should_be_compose_the_provided_mapper() {
+        @DisplayName("map (Consumer) composed function should execute provided mapper when initial result is a success")
+        public void map_consumer_composed_function_should_execute_provided_mapper_when_initial_result_is_a_success() {
             // given
-            ResultFunction<String, String, String> resultFunction = Result::failure;
-            Consumer<String> consumer = s -> {
-            };
+            ResultFunction<String, String, String> successfulInitialFunction = Result::success;
+            Consumer<String> consumer = s -> {};
 
             // when
-            var composed = resultFunction.map(consumer);
+            var composed = successfulInitialFunction.map(consumer);
 
             // then
-            assertThat(composed.apply("because")).isEqualTo(failure("because"));
+            assertThat(composed.apply("should be 17")).isEqualTo(VoidResult.success());
+        }
+
+        @Test
+        @DisplayName("map (Consumer) composed function should return initial result when initial result is a failure")
+        public void map_consumer_composed_function_should_return_initial_result_when_initial_result_is_a_failure() {
+            // given
+            ResultFunction<String, String, String> failingInitialFunction = Result::failure;
+            Consumer<String> mapper = s -> {};
+
+            // when
+            var result = failingInitialFunction.map(mapper);
+
+            // then
+            assertThat(result.apply("should fail")).isEqualTo(VoidResult.failure("should fail"));
+        }
+
+        @Test
+        @DisplayName("map (Consumer) composed function should not execute provided mapper when initial result is a failure")
+        public void map_consumer_composed_function_should_not_execute_provided_mapper_when_initial_result_is_a_failure() {
+            // given
+            ResultFunction<String, String, String> failingInitialFunction = Result::failure;
+            Consumer<String> spiedConsumer = spiedConsumer();
+
+            // when
+            failingInitialFunction.map(spiedConsumer);
+
+            // then
+            verify(spiedConsumer, never()).accept(any());
         }
     }
 
