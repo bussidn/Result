@@ -2,6 +2,7 @@ package dbus.result.void_;
 
 import dbus.result.Result;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -82,6 +83,43 @@ public interface VoidResult<F> {
      * @throws NullPointerException when provided supplier is null
      */
     <S> Result<S, F> map(Supplier<? extends S> supplier);
+
+    /**
+     * VoidResult functor map function.
+     * <p>
+     * It applies the provided mapper to the failure value if this is a failure.
+     * Returns the current success otherwise.
+     *
+     * @param mapper the mapper to apply to the failure
+     * @param <G>    the new success return type
+     * @return a VoidResult containing either the current success or a mapped failure
+     * @throws NullPointerException when provided mapper is null
+     */
+    <G> VoidResult<G> mapFailure(Function<? super F, ? extends G> mapper);
+
+    /**
+     * VoidResult functor map function.
+     * <p>
+     * It executes the provided mapper if this is a failure and keep the provided value as the new failure.
+     * Returns the current success otherwise.
+     *
+     * @param mapper the mapper to apply to the failure
+     * @param <G>    the new success return type
+     * @return a VoidResult containing either the current success or a supplied failure
+     * @throws NullPointerException when provided mapper is null
+     */
+    <G> VoidResult<G> mapFailure(Supplier<? extends G> mapper);
+
+    /**
+     * consumes the current failure if any, discard it otherwise
+     * <p>
+     * It applies the provided consumer to the failure value if this is a failure.
+     * Returns the current success otherwise as an Optional.
+     *
+     * @param consumer the consumer to apply to the failure
+     * @throws NullPointerException when provided consumer is null
+     */
+    void mapFailure(Consumer<? super F> consumer);
 
     /**
      * VoidResult monad bind function.

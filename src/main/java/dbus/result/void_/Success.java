@@ -4,6 +4,7 @@ import dbus.result.Result;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -44,6 +45,23 @@ final public class Success<F> implements VoidResult<F> {
     @Override
     public <S> Result<S, F> map(Supplier<? extends S> supplier) {
         return Result.success(supplier.get());
+    }
+
+    @Override
+    public <G> VoidResult<G> mapFailure(Function<? super F, ? extends G> mapper) {
+        requireNonNull(mapper);
+        return this.cast();
+    }
+
+    @Override
+    public <G> VoidResult<G> mapFailure(Supplier<? extends G> mapper) {
+        requireNonNull(mapper);
+        return this.cast();
+    }
+
+    @Override
+    public void mapFailure(Consumer<? super F> consumer) {
+        requireNonNull(consumer);
     }
 
     @Override

@@ -10,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -22,8 +23,7 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 class VoidResultTest {
 
@@ -151,9 +151,9 @@ class VoidResultTest {
                 Arguments.of(VoidResult.<Number>success()),
                 Arguments.of(VoidResult.<Number>failure(12)),
                 Arguments.of(VoidResult.<Long>success()),
-                Arguments.of(VoidResult.failure(14546765L)),
+                Arguments.of(failure(14546765L)),
                 Arguments.of(VoidResult.<String>success()),
-                Arguments.of(VoidResult.failure("failure"))
+                Arguments.of(failure("failure"))
         );
     }
 
@@ -162,107 +162,258 @@ class VoidResultTest {
     @TestInstance(PER_CLASS)
     class Functor {
 
-        @ParameterizedTest(name = "map (Runnable) should not accept null parameter when result is {0}")
-        @MethodSource("successAndFailure")
-        public void map_runnable_should_not_accept_null_parameter(VoidResult<String> result) {
-            assertThrows(NullPointerException.class, () ->
-                    result.map((Runnable) null)
-            );
+
+        @Nested
+        @DisplayName("for success")
+        @TestInstance(PER_CLASS)
+        class Success {
+
+            @ParameterizedTest(name = "map (Runnable) should not accept null parameter when result is {0}")
+            @MethodSource("successAndFailure")
+            public void map_runnable_should_not_accept_null_parameter(VoidResult<String> result) {
+                assertThrows(NullPointerException.class, () ->
+                        result.map((Runnable) null)
+                );
+            }
+
+            @Test
+            @DisplayName("map (Runnable) should execute runnable when result is a success")
+            public void map_runnable_should_execute_runnable_when_result_is_a_success() {
+                // given
+                VoidResult<Integer> success = success();
+                Runnable runnable = spiedRunnable();
+
+                // when
+                success.map(runnable);
+
+                // then
+                verify(runnable).run();
+            }
+
+            @Test
+            @DisplayName("map (Runnable) should not execute runnable when result is a failure")
+            public void map_runnable_should_not_execute_runnable_when_result_is_a_failure() {
+                // given
+                VoidResult<Integer> success = failure(3);
+                Runnable runnable = spiedRunnable();
+
+                // when
+                success.map(runnable);
+
+                // then
+                verify(runnable, never()).run();
+            }
+
+            @Test
+            @DisplayName("map (Runnable) should return a success when result is a success")
+            public void map_runnable_should_return_a_success_when_result_is_a_success() {
+                // given
+                VoidResult<Integer> success = success();
+                Runnable runnable = spiedRunnable();
+
+                // when
+                VoidResult<Integer> mapped = success.map(runnable);
+
+                // then
+                assertThat(mapped).isEqualTo(success());
+            }
+
+            @Test
+            @DisplayName("map (Runnable) should execute the current failure when result is a failure")
+            public void map_runnable_should_return_the_current_failure_when_result_is_a_failure() {
+                // given
+                VoidResult<Integer> success = failure(3);
+
+                // when
+                VoidResult<Integer> mapped = success.map(() -> {
+                });
+
+                // then
+                assertThat(mapped).isEqualTo(failure(3));
+            }
+
+            @ParameterizedTest(name = "map (Supplier) should not accept null parameter when result is {0}")
+            @MethodSource("successAndFailure")
+            public void map_supplier_should_not_accept_null_parameter(VoidResult<String> result) {
+                assertThrows(NullPointerException.class, () ->
+                        result.map((Supplier<String>) null)
+                );
+            }
+
+            Stream<Arguments> successAndFailure() {
+                return VoidResultTest.successAndFailure();
+            }
+
+            @Test
+            @DisplayName("map (Supplier) should execute supplier when result is a success")
+            public void map_function_should_apply_mapper_when_result_is_a_success() {
+                // given
+                VoidResult<Integer> success = success();
+
+                // when
+                Result<String, Integer> mapped = success.map(() -> "mapped !");
+
+                // then
+                assertThat(mapped).isEqualTo(Result.success("mapped !"));
+            }
+
+            @Test
+            @DisplayName("map (Supplier) should return current failure when result is a failure")
+            public void map_function_should_return_current_failure_when_result_is_a_failure() {
+                // given
+                VoidResult<Integer> failure = failure(23);
+
+                // when
+                Result<String, Integer> mapped = failure.map(() -> fail("should not be executed"));
+
+                // then
+                assertThat(mapped).isEqualTo(Result.failure(23));
+            }
         }
 
-        @Test
-        @DisplayName("map (Runnable) should execute runnable when result is a success")
-        public void map_runnable_should_execute_runnable_when_result_is_a_success() {
-            // given
-            VoidResult<Integer> success = success();
-            Runnable runnable = spiedRunnable();
 
-            // when
-            success.map(runnable);
+        @Nested
+        @DisplayName("for failure")
+        @TestInstance(PER_CLASS)
+        class Failure {
 
-            // then
-            verify(runnable).run();
+            Stream<Arguments> successAndFailure() {
+                return VoidResultTest.successAndFailure();
+            }
+
+            @ParameterizedTest(name = "mapFailure (Function) should not accept null parameter when result is {0}")
+            @MethodSource("successAndFailure")
+            public void mapFailure_function_should_not_accept_null_parameter(VoidResult<String> result) {
+                assertThrows(NullPointerException.class, () ->
+                        result.mapFailure((Function<String, String>) null)
+                );
+            }
+
+            @Test
+            @DisplayName("mapFailure (Function) should apply mapper when result is a failure")
+            public void mapFailure_function_should_apply_mapper_when_result_is_a_failure() {
+                // given
+                VoidResult<Integer> failure = failure(3);
+
+                // when
+                VoidResult<String> mapped = failure.mapFailure((Function<? super Integer, String>) i -> Stream.generate(() -> "a").limit(i).reduce("", String::concat));
+
+                // then
+                assertThat(mapped).isEqualTo(failure("aaa"));
+            }
+
+            @Test
+            @DisplayName("mapFailure (Function) should return current success when result is a success")
+            public void mapFailure_function_should_return_current_success_when_result_is_a_success() {
+                // given
+                VoidResult<Integer> failure = success();
+
+                // when
+                VoidResult<Integer> mapped = failure.mapFailure(i -> i + 14);
+
+                // then
+                assertThat(mapped).isEqualTo(success());
+            }
+
+            @Test
+            @DisplayName("mapFailure (Function) should not apply mapper when result is a success")
+            public void mapFailure_function_should_not_apply_mapper_when_result_is_a_success() {
+                // given
+                VoidResult<Integer> success = VoidResult.success();
+                Function<Integer, Integer> spiedMapper = spiedFunction(i -> i);
+
+                // when
+                success.mapFailure(spiedMapper);
+
+                // then
+                verify(spiedMapper, never()).apply(any());
+            }
+
+            @ParameterizedTest(name = "mapFailure (Supplier) should not accept null parameter when result is {0}")
+            @MethodSource("successAndFailure")
+            public void mapFailure_supplier_should_not_accept_null_parameter(VoidResult<String> result) {
+                assertThrows(NullPointerException.class, () ->
+                        result.mapFailure((Supplier<String>) null)
+                );
+            }
+
+            @Test
+            @DisplayName("mapFailure (Supplier) should apply mapper when result is a failure")
+            public void mapFailure_supplier_should_apply_mapper_when_result_is_a_failure() {
+                // given
+                VoidResult<Integer> failure = failure(3);
+
+                // when
+                VoidResult<String> mapped = failure.mapFailure(() -> "created");
+
+                // then
+                assertThat(mapped).isEqualTo(failure("created"));
+            }
+
+            @Test
+            @DisplayName("mapFailure (Supplier) should return current success when result is a success")
+            public void mapFailure_supplier_should_return_current_success_when_result_is_a_success() {
+                // given
+                VoidResult<Integer> failure = success();
+
+                // when
+                VoidResult<Integer> mapped = failure.mapFailure(() -> 41);
+
+                // then
+                assertThat(mapped).isEqualTo(success());
+            }
+
+            @Test
+            @DisplayName("mapFailure (Supplier) should not apply mapper when result is a success")
+            public void mapFailure_supplier_should_not_apply_mapper_when_result_is_a_success() {
+                // given
+                VoidResult<Integer> success = success();
+                Supplier<Number> spiedMapper = spiedSupplier(() -> 15.42);
+
+                // when
+                success.mapFailure(spiedMapper);
+
+                // then
+                verify(spiedMapper, never()).get();
+            }
+
+            @ParameterizedTest(name = "mapFailure (Consumer) should not accept null parameter when result is {0}")
+            @MethodSource("successAndFailure")
+            public void mapFailure_consumer_should_not_accept_null_parameter(VoidResult<String> result) {
+                assertThrows(NullPointerException.class, () ->
+                        result.mapFailure((Consumer<? super String>) null)
+                );
+            }
+
+            @Test
+            @DisplayName("mapFailure (Consumer) should apply mapper when result is a failure")
+            public void mapFailure_consumer_should_apply_mapper_when_result_is_a_failure() {
+                // given
+                VoidResult<Integer> success = failure(42);
+                Consumer<Number> spiedConsumer = spiedConsumer();
+
+                // when
+                success.mapFailure(spiedConsumer);
+
+                // then
+                verify(spiedConsumer, times(1)).accept(42);
+            }
+
+            @Test
+            @DisplayName("mapFailure (Consumer) should not apply mapper when result is a success")
+            public void mapFailure_consumer_should_not_apply_mapper_when_result_is_a_success() {
+                // given
+                VoidResult<Integer> success = success();
+                Consumer<Number> spiedConsumer = spiedConsumer();
+
+                // when
+                success.mapFailure(spiedConsumer);
+
+                // then
+                verify(spiedConsumer, never()).accept(any());
+            }
         }
 
-        @Test
-        @DisplayName("map (Runnable) should not execute runnable when result is a failure")
-        public void map_runnable_should_not_execute_runnable_when_result_is_a_failure() {
-            // given
-            VoidResult<Integer> success = failure(3);
-            Runnable runnable = spiedRunnable();
-
-            // when
-            success.map(runnable);
-
-            // then
-            verify(runnable, never()).run();
-        }
-
-        @Test
-        @DisplayName("map (Runnable) should return a success when result is a success")
-        public void map_runnable_should_return_a_success_when_result_is_a_success() {
-            // given
-            VoidResult<Integer> success = success();
-            Runnable runnable = spiedRunnable();
-
-            // when
-            VoidResult<Integer> mapped = success.map(runnable);
-
-            // then
-            assertThat(mapped).isEqualTo(success());
-        }
-
-        @Test
-        @DisplayName("map (Runnable) should execute the current failure when result is a failure")
-        public void map_runnable_should_return_the_current_failure_when_result_is_a_failure() {
-            // given
-            VoidResult<Integer> success = failure(3);
-
-            // when
-            VoidResult<Integer> mapped = success.map(() -> {
-            });
-
-            // then
-            assertThat(mapped).isEqualTo(failure(3));
-        }
-
-        @ParameterizedTest(name = "map (Supplier) should not accept null parameter when result is {0}")
-        @MethodSource("successAndFailure")
-        public void map_supplier_should_not_accept_null_parameter(VoidResult<String> result) {
-            assertThrows(NullPointerException.class, () ->
-                    result.map((Supplier<String>) null)
-            );
-        }
-
-        Stream<Arguments> successAndFailure() {
-            return VoidResultTest.successAndFailure();
-        }
-
-        @Test
-        @DisplayName("map (Supplier) should execute supplier when result is a success")
-        public void map_function_should_apply_mapper_when_result_is_a_success() {
-            // given
-            VoidResult<Integer> success = success();
-
-            // when
-            Result<String, Integer> mapped = success.map(() -> "mapped !");
-
-            // then
-            assertThat(mapped).isEqualTo(Result.success("mapped !"));
-        }
-
-        @Test
-        @DisplayName("map (Supplier) should return current failure when result is a failure")
-        public void map_function_should_return_current_failure_when_result_is_a_failure() {
-            // given
-            VoidResult<Integer> failure = failure(23);
-
-            // when
-            Result<String, Integer> mapped = failure.map(() -> fail("should not be executed"));
-
-            // then
-            assertThat(mapped).isEqualTo(Result.failure(23));
-        }
     }
 
     @Nested
@@ -284,7 +435,7 @@ class VoidResultTest {
                 VoidResult<String> expectedResult
         ) {
             // given
-            VoidResult<String> success = VoidResult.success();
+            VoidResult<String> success = success();
 
             // when
             VoidResult<String> flatMappedResult = success.flatMap(boundVoidResultSupplier);
@@ -297,11 +448,11 @@ class VoidResultTest {
             return Stream.of(
                     Arguments.of(
                             (Supplier<VoidResult<String>>) VoidResult::success,
-                            VoidResult.success()
+                            success()
                     ),
                     Arguments.of(
-                            (Supplier<VoidResult<String>>) () -> VoidResult.failure("because"),
-                            VoidResult.failure("because")
+                            (Supplier<VoidResult<String>>) () -> failure("because"),
+                            failure("because")
                     )
             );
         }
@@ -309,21 +460,21 @@ class VoidResultTest {
         @Test
         public void flatMap_should_return_the_initial_failure_when_initial_result_is_a_failure() {
             // given
-            VoidResult<String> failure = VoidResult.failure("already failed");
-            Supplier<VoidResult<String>> should_not_be_executed = () -> VoidResult.failure("should not be executed");
+            VoidResult<String> failure = failure("already failed");
+            Supplier<VoidResult<String>> should_not_be_executed = () -> failure("should not be executed");
 
             // when
             VoidResult<String> flatMappedResult = failure.flatMap(should_not_be_executed);
 
             // then
-            assertThat(flatMappedResult).isEqualTo(VoidResult.failure("already failed"));
+            assertThat(flatMappedResult).isEqualTo(failure("already failed"));
         }
 
         @Test
         public void flatMap_should_not_execute_provided_bound_supplier_when_initial_result_is_a_failure() {
             // given
-            VoidResult<String> failure = VoidResult.failure("already failed");
-            Supplier<VoidResult<String>> should_not_be_executed = spiedSupplier(() -> VoidResult.failure("should not be executed"));
+            VoidResult<String> failure = failure("already failed");
+            Supplier<VoidResult<String>> should_not_be_executed = spiedSupplier(() -> failure("should not be executed"));
 
             // when
             failure.flatMap(should_not_be_executed);
@@ -355,7 +506,7 @@ class VoidResultTest {
                     Result<Integer, String> expectedResult
             ) {
                 // given
-                VoidResult<String> success = VoidResult.success();
+                VoidResult<String> success = success();
 
                 // when
                 Result<Integer, String> flatMappedResult = success.flatMapToResult(boundSupplier);
@@ -380,7 +531,7 @@ class VoidResultTest {
             @Test
             public void flatMapToResult_should_return_the_initial_failure_when_initial_result_is_a_failure() {
                 // given
-                VoidResult<String> failure = VoidResult.failure("already failed");
+                VoidResult<String> failure = failure("already failed");
                 Supplier<Result<Integer, String>> should_not_be_executed = () -> Result.failure("should not be executed");
 
                 // when
@@ -393,7 +544,7 @@ class VoidResultTest {
             @Test
             public void flatMapToResult_should_not_execute_provided_bound_supplier_when_initial_result_is_a_failure() {
                 // given
-                VoidResult<String> failure = VoidResult.failure("already failed");
+                VoidResult<String> failure = failure("already failed");
                 Supplier<Result<Integer, String>> should_not_be_executed = spiedSupplier(() -> Result.failure("should not be executed"));
 
                 // when
@@ -426,21 +577,21 @@ class VoidResultTest {
         @DisplayName("tryRecovering (Function) should return the initial success when current result is a success")
         public void tryRecovering_function_should_return_the_initial_success_when_current_result_is_a_success() {
             // given
-            VoidResult<String> result = VoidResult.success();
+            VoidResult<String> result = success();
 
             // when
-            var recovered = result.tryRecovering(s -> VoidResult.failure("should not be executed"));
+            var recovered = result.tryRecovering(s -> failure("should not be executed"));
 
             // then
-            assertThat(recovered).isEqualTo(VoidResult.success());
+            assertThat(recovered).isEqualTo(success());
         }
 
         @Test
         @DisplayName("tryRecovering (Function) should not execute provided recovering function when initial result is a success")
         public void tryRecovering_function_should_not_execute_provided_recovering_function_when_initial_result_is_a_success() {
             // given
-            VoidResult<String> result = VoidResult.success();
-            Function<String, VoidResult<String>> should_not_be_executed = spiedFunction(s -> VoidResult.success());
+            VoidResult<String> result = success();
+            Function<String, VoidResult<String>> should_not_be_executed = spiedFunction(s -> success());
 
             // when
             result.tryRecovering(should_not_be_executed);
@@ -450,14 +601,13 @@ class VoidResultTest {
         }
 
 
-
         @ParameterizedTest(name = "tryRecovering (Function) should return the recovering function result when initial result is a failure : {0}")
         @MethodSource("successAndFailure")
         public void tryRecovering_function_should_return_the_new_success_when_current_result_is_a_failure(
                 final VoidResult<String> recoveringFunctionResult
         ) {
             // given
-            VoidResult<String> result = VoidResult.failure("failed so badly but it does not matter !");
+            VoidResult<String> result = failure("failed so badly but it does not matter !");
 
             // when
             var recovered = result.tryRecovering(s -> recoveringFunctionResult);
@@ -478,21 +628,21 @@ class VoidResultTest {
         @DisplayName("tryRecovering (Supplier) should return the initial success when current result is a success")
         public void tryRecovering_supplier_should_return_the_initial_success_when_current_result_is_a_success() {
             // given
-            VoidResult<String> result = VoidResult.success();
+            VoidResult<String> result = success();
 
             // when
-            var recovered = result.tryRecovering(() -> VoidResult.failure("should not be executed"));
+            var recovered = result.tryRecovering(() -> failure("should not be executed"));
 
             // then
-            assertThat(recovered).isEqualTo(VoidResult.success());
+            assertThat(recovered).isEqualTo(success());
         }
 
         @Test
         @DisplayName("tryRecovering (Supplier) should not execute provided recovering function when initial result is a success")
         public void tryRecovering_supplier_should_not_execute_provided_recovering_function_when_initial_result_is_a_success() {
             // given
-            VoidResult<String> result = VoidResult.success();
-            Supplier<VoidResult<String>> should_not_be_executed = spiedSupplier(() -> VoidResult.failure("should not be executed"));
+            VoidResult<String> result = success();
+            Supplier<VoidResult<String>> should_not_be_executed = spiedSupplier(() -> failure("should not be executed"));
 
             // when
             result.tryRecovering(should_not_be_executed);
@@ -507,7 +657,7 @@ class VoidResultTest {
                 final VoidResult<String> recoveringSupplierResult
         ) {
             // given
-            VoidResult<String> result = VoidResult.failure("failed so badly but it does not matter !");
+            VoidResult<String> result = failure("failed so badly but it does not matter !");
 
             // when
             var recovered = result.tryRecovering(() -> recoveringSupplierResult);
@@ -524,7 +674,7 @@ class VoidResultTest {
     static Stream<Arguments> successAndFailure() {
         return Stream.of(
                 Arguments.of(VoidResult.<String>success()),
-                Arguments.of(VoidResult.failure("failure"))
+                Arguments.of(failure("failure"))
         );
     }
 

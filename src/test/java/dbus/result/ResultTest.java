@@ -180,310 +180,330 @@ class ResultTest {
     @TestInstance(PER_CLASS)
     class Functor {
 
-        @ParameterizedTest(name = "map (Function) should not accept null parameter when result is {0}")
-        @MethodSource("successAndFailure")
-        public void map_function_should_not_accept_null_parameter(Result<String, String> result) {
-            assertThrows(NullPointerException.class, () ->
-                    result.map((Function<String, String>) null)
-            );
+        @Nested
+        @DisplayName("for success")
+        @TestInstance(PER_CLASS)
+        class Success {
+
+            @ParameterizedTest(name = "map (Function) should not accept null parameter when result is {0}")
+            @MethodSource("successAndFailure")
+            public void map_function_should_not_accept_null_parameter(Result<String, String> result) {
+                assertThrows(NullPointerException.class, () ->
+                        result.map((Function<String, String>) null)
+                );
+            }
+
+            Stream<Arguments> successAndFailure() {
+                return ResultTest.successAndFailure();
+            }
+
+            @Test
+            @DisplayName("map (Function) should apply mapper when result is a success")
+            public void map_function_should_apply_mapper_when_result_is_a_success() {
+                // given
+                Result<String, Integer> success = success("Hello");
+
+                // when
+                Result<String, Integer> mapped = success.map(s -> s + " World !");
+
+                // then
+                assertThat(mapped).isEqualTo(success("Hello World !"));
+            }
+
+            @Test
+            @DisplayName("map (Function) should return current failure when result is a failure")
+            public void map_function_should_return_current_failure_when_result_is_a_failure() {
+                // given
+                Result<String, Integer> failure = failure(17);
+
+                // when
+                Result<String, Integer> mapped = failure.map(s -> s + " World !");
+
+                // then
+                assertThat(mapped).isEqualTo(failure(17));
+            }
+
+            @Test
+            @DisplayName("map (Function) should not apply mapper when result is a failure")
+            public void map_function_should_not_apply_mapper_when_result_is_a_failure() {
+                // given
+                Result<String, Integer> success = failure(12);
+                Function<String, String> spiedMapper = spiedFunction(s -> s);
+
+                // when
+                success.map(spiedMapper);
+
+                // then
+                verify(spiedMapper, never()).apply(any());
+            }
+
+            @ParameterizedTest(name = "map (Supplier) should not accept null parameter when result is {0}")
+            @MethodSource("successAndFailure")
+            public void map_supplier_should_not_accept_null_parameter(Result<String, String> result) {
+                assertThrows(NullPointerException.class, () ->
+                        result.map((Supplier<String>) null)
+                );
+            }
+
+            @Test
+            @DisplayName("map (Supplier) should apply mapper when result is a success")
+            public void map_supplier_should_apply_mapper_when_result_is_a_success() {
+                // given
+                Result<String, Integer> success = success("Should not matter");
+
+                // when
+                Result<String, Integer> mapped = success.map(() -> "Supplied success");
+
+                // then
+                assertThat(mapped).isEqualTo(success("Supplied success"));
+            }
+
+            @Test
+            @DisplayName("map (Supplier) should return current failure when result is a failure")
+            public void map_supplier_should_return_current_failure_when_result_is_a_failure() {
+                // given
+                Result<String, Integer> failure = failure(17);
+
+                // when
+                Result<String, Integer> mapped = failure.map(() -> " should not matter");
+
+                // then
+                assertThat(mapped).isEqualTo(failure(17));
+            }
+
+            @Test
+            @DisplayName("map (Supplier) should not execute mapper when result is a failure")
+            public void map_Supplier_should_not_execute_mapper_when_result_is_a_failure() {
+                // given
+                Result<String, Integer> success = failure(12);
+                Supplier<String> spiedMapper = spiedSupplier(() -> "test");
+
+                // when
+                success.map(spiedMapper);
+
+                // then
+                verify(spiedMapper, never()).get();
+            }
+
+            @ParameterizedTest(name = "map (Consumer) should not accept null parameter when result is {0}")
+            @MethodSource("successAndFailure")
+            public void map_consumer_should_not_accept_null_parameter(Result<String, String> result) {
+                assertThrows(NullPointerException.class, () ->
+                        result.map((Consumer<String>) null)
+                );
+            }
+
+            @Test
+            @DisplayName("map (Consumer) should return a void success when result is a success")
+            public void map_consumer_should_return_void_success_when_result_is_a_success() {
+                // given
+                Result<String, Integer> success = success("Hello");
+
+                // when
+                VoidResult<Integer> mapped = success.map(s -> {
+                });
+
+                // then
+                assertThat(mapped).isEqualTo(VoidResult.success());
+            }
+
+            @Test
+            @DisplayName("map (Consumer) should apply consumer when result is a success")
+            public void map_consumer_should_apply_consumer_when_result_is_a_success() {
+                // given
+                Result<String, Integer> success = success("Hello");
+                Consumer<String> spiedConsumer = spiedConsumer();
+
+                // when
+                success.map(spiedConsumer);
+
+                // then
+                verify(spiedConsumer, once()).accept("Hello");
+            }
+
+            @Test
+            @DisplayName("map (Consumer) should return current failure when result is a failure")
+            public void map_consumer_should_return_current_failure_when_result_is_a_failure() {
+                // given
+                Result<String, Integer> failure = failure(17);
+
+                // when
+                VoidResult<Integer> mapped = failure.map(s -> {
+                });
+
+                // then
+                assertThat(mapped).isEqualTo(VoidResult.failure(17));
+            }
+
+            @Test
+            @DisplayName("map (Consumer) should return not execute consumer when result is a failure")
+            public void map_consumer_should_return_not_execute_consumer_when_result_is_a_failure() {
+                // given
+                Result<String, Integer> failure = failure(17);
+                Consumer<String> spiedConsumer = spiedConsumer();
+
+                // when
+                failure.map(spiedConsumer);
+
+                // then
+                verify(spiedConsumer, never()).accept(any());
+            }
         }
 
-        Stream<Arguments> successAndFailure() {
-            return ResultTest.successAndFailure();
-        }
+        @Nested
+        @DisplayName("for failure")
+        @TestInstance(PER_CLASS)
+        class Failure {
 
-        @Test
-        @DisplayName("map (Function) should apply mapper when result is a success")
-        public void map_function_should_apply_mapper_when_result_is_a_success() {
-            // given
-            Result<String, Integer> success = success("Hello");
+            Stream<Arguments> successAndFailure() {
+                return ResultTest.successAndFailure();
+            }
 
-            // when
-            Result<String, Integer> mapped = success.map(s -> s + " World !");
+            @ParameterizedTest(name = "mapFailure (Function) should not accept null parameter when result is {0}")
+            @MethodSource("successAndFailure")
+            public void mapFailure_function_should_not_accept_null_parameter(Result<String, Integer> result) {
+                assertThrows(NullPointerException.class, () ->
+                        result.mapFailure((Function<Integer, String>) null)
+                );
+            }
 
-            // then
-            assertThat(mapped).isEqualTo(success("Hello World !"));
-        }
+            @Test
+            @DisplayName("mapFailure (Function) should apply mapper when result is a failure")
+            public void mapFailure_function_should_apply_mapper_when_result_is_a_failure() {
+                // given
+                Result<String, Integer> failure = failure(3);
 
-        @Test
-        @DisplayName("map (Function) should return current failure when result is a failure")
-        public void map_function_should_return_current_failure_when_result_is_a_failure() {
-            // given
-            Result<String, Integer> failure = failure(17);
+                // when
+                Result<String, String> mapped = failure.mapFailure((Function<? super Integer, String>) i -> Stream.generate(() -> "a").limit(i).reduce("", String::concat));
 
-            // when
-            Result<String, Integer> mapped = failure.map(s -> s + " World !");
+                // then
+                assertThat(mapped).isEqualTo(failure("aaa"));
+            }
 
-            // then
-            assertThat(mapped).isEqualTo(failure(17));
-        }
+            @Test
+            @DisplayName("mapFailure (Function) should return current success when result is a success")
+            public void mapFailure_function_should_return_current_success_when_result_is_a_success() {
+                // given
+                Result<String, Integer> failure = success("should be preserved");
 
-        @Test
-        @DisplayName("map (Function) should not apply mapper when result is a failure")
-        public void map_function_should_not_apply_mapper_when_result_is_a_failure() {
-            // given
-            Result<String, Integer> success = failure(12);
-            Function<String, String> spiedMapper = spiedFunction(s -> s);
+                // when
+                Result<String, Integer> mapped = failure.mapFailure(i -> i + 14);
 
-            // when
-            success.map(spiedMapper);
+                // then
+                assertThat(mapped).isEqualTo(success("should be preserved"));
+            }
 
-            // then
-            verify(spiedMapper, never()).apply(any());
-        }
+            @Test
+            @DisplayName("mapFailure (Function) should not apply mapper when result is a success")
+            public void mapFailure_function_should_not_apply_mapper_when_result_is_a_success() {
+                // given
+                Result<String, Integer> success = success("this is indubitably a a success");
+                Function<Integer, Integer> spiedMapper = spiedFunction(i -> i);
 
-        @ParameterizedTest(name = "map (Supplier) should not accept null parameter when result is {0}")
-        @MethodSource("successAndFailure")
-        public void map_supplier_should_not_accept_null_parameter(Result<String, String> result) {
-            assertThrows(NullPointerException.class, () ->
-                    result.map((Supplier<String>) null)
-            );
-        }
+                // when
+                success.mapFailure(spiedMapper);
 
-        @Test
-        @DisplayName("map (Supplier) should apply mapper when result is a success")
-        public void map_supplier_should_apply_mapper_when_result_is_a_success() {
-            // given
-            Result<String, Integer> success = success("Should not matter");
+                // then
+                verify(spiedMapper, never()).apply(any());
+            }
 
-            // when
-            Result<String, Integer> mapped = success.map(() -> "Supplied success");
+            @ParameterizedTest(name = "mapFailure (Supplier) should not accept null parameter when result is {0}")
+            @MethodSource("successAndFailure")
+            public void mapFailure_supplier_should_not_accept_null_parameter(Result<String, Integer> result) {
+                assertThrows(NullPointerException.class, () ->
+                        result.mapFailure((Supplier<String>) null)
+                );
+            }
 
-            // then
-            assertThat(mapped).isEqualTo(success("Supplied success"));
-        }
+            @Test
+            @DisplayName("mapFailure (Supplier) should apply mapper when result is a failure")
+            public void mapFailure_supplier_should_apply_mapper_when_result_is_a_failure() {
+                // given
+                Result<String, Integer> failure = failure(3);
 
-        @Test
-        @DisplayName("map (Supplier) should return current failure when result is a failure")
-        public void map_supplier_should_return_current_failure_when_result_is_a_failure() {
-            // given
-            Result<String, Integer> failure = failure(17);
+                // when
+                Result<String, String> mapped = failure.mapFailure(() -> "created");
 
-            // when
-            Result<String, Integer> mapped = failure.map(() -> " should not matter");
+                // then
+                assertThat(mapped).isEqualTo(failure("created"));
+            }
 
-            // then
-            assertThat(mapped).isEqualTo(failure(17));
-        }
+            @Test
+            @DisplayName("mapFailure (Supplier) should return current success when result is a success")
+            public void mapFailure_supplier_should_return_current_success_when_result_is_a_success() {
+                // given
+                Result<String, Integer> failure = success("should be preserved");
 
-        @Test
-        @DisplayName("map (Supplier) should not execute mapper when result is a failure")
-        public void map_Supplier_should_not_execute_mapper_when_result_is_a_failure() {
-            // given
-            Result<String, Integer> success = failure(12);
-            Supplier<String> spiedMapper = spiedSupplier(() -> "test");
+                // when
+                Result<String, Integer> mapped = failure.mapFailure(() -> 41);
 
-            // when
-            success.map(spiedMapper);
+                // then
+                assertThat(mapped).isEqualTo(success("should be preserved"));
+            }
 
-            // then
-            verify(spiedMapper, never()).get();
-        }
+            @Test
+            @DisplayName("mapFailure (Supplier) should not apply mapper when result is a success")
+            public void mapFailure_supplier_should_not_apply_mapper_when_result_is_a_success() {
+                // given
+                Result<String, Integer> success = success("this is indubitably a a success");
+                Supplier<Number> spiedMapper = spiedSupplier(() -> 15.42);
 
-        @ParameterizedTest(name = "map (Consumer) should not accept null parameter when result is {0}")
-        @MethodSource("successAndFailure")
-        public void map_consumer_should_not_accept_null_parameter(Result<String, String> result) {
-            assertThrows(NullPointerException.class, () ->
-                    result.map((Consumer<String>) null)
-            );
-        }
+                // when
+                success.mapFailure(spiedMapper);
 
-        @Test
-        @DisplayName("map (Consumer) should return a void success when result is a success")
-        public void map_consumer_should_return_void_success_when_result_is_a_success() {
-            // given
-            Result<String, Integer> success = success("Hello");
+                // then
+                verify(spiedMapper, never()).get();
+            }
 
-            // when
-            VoidResult<Integer> mapped = success.map(s -> {});
+            @ParameterizedTest(name = "mapFailure (Consumer) should not accept null parameter when result is {0}")
+            @MethodSource("successAndFailure")
+            public void mapFailure_consumer_should_not_accept_null_parameter(Result<String, Integer> result) {
+                assertThrows(NullPointerException.class, () ->
+                        result.mapFailure((Consumer<? super Integer>) null)
+                );
+            }
 
-            // then
-            assertThat(mapped).isEqualTo(VoidResult.success());
-        }
+            @Test
+            @DisplayName("mapFailure (Consumer) should apply mapper when result is a failure")
+            public void mapFailure_consumer_should_apply_mapper_when_result_is_a_failure() {
+                // given
+                Result<String, Integer> failure = failure(3);
 
-        @Test
-        @DisplayName("map (Consumer) should apply consumer when result is a success")
-        public void map_consumer_should_apply_consumer_when_result_is_a_success() {
-            // given
-            Result<String, Integer> success = success("Hello");
-            Consumer<String> spiedConsumer = spiedConsumer();
+                // when
+                Optional<String> mapped = failure.mapFailure(i -> {
+                });
 
-            // when
-            success.map(spiedConsumer);
+                // then
+                assertThat(mapped).isEqualTo(Optional.empty());
+            }
 
-            // then
-            verify(spiedConsumer, once()).accept("Hello");
-        }
+            @Test
+            @DisplayName("mapFailure (Consumer) should return current success when result is a success")
+            public void mapFailure_consumer_should_return_current_success_when_result_is_a_success() {
+                // given
+                Result<String, Integer> failure = success("should be preserved");
 
-        @Test
-        @DisplayName("map (Consumer) should return current failure when result is a failure")
-        public void map_consumer_should_return_current_failure_when_result_is_a_failure() {
-            // given
-            Result<String, Integer> failure = failure(17);
+                // when
+                Optional<String> mapped = failure.mapFailure(i -> {
+                });
 
-            // when
-            VoidResult<Integer> mapped = failure.map(s -> {});
+                // then
+                assertThat(mapped).isEqualTo(Optional.of("should be preserved"));
+            }
 
-            // then
-            assertThat(mapped).isEqualTo(VoidResult.failure(17));
-        }
+            @Test
+            @DisplayName("mapFailure (Consumer) should not apply mapper when result is a success")
+            public void mapFailure_consumer_should_not_apply_mapper_when_result_is_a_success() {
+                // given
+                Result<String, Integer> success = success("this is indubitably a a success");
+                Consumer<Number> spiedConsumer = spiedConsumer();
 
-        @Test
-        @DisplayName("map (Consumer) should return not execute consumer when result is a failure")
-        public void map_consumer_should_return_not_execute_consumer_when_result_is_a_failure() {
-            // given
-            Result<String, Integer> failure = failure(17);
-            Consumer<String> spiedConsumer = spiedConsumer();
+                // when
+                success.mapFailure(spiedConsumer);
 
-            // when
-            failure.map(spiedConsumer);
-
-            // then
-            verify(spiedConsumer, never()).accept(any());
-        }
-
-        @ParameterizedTest(name = "mapFailure (Function) should not accept null parameter when result is {0}")
-        @MethodSource("successAndFailure")
-        public void mapFailure_function_should_not_accept_null_parameter(Result<String, Integer> result) {
-            assertThrows(NullPointerException.class, () ->
-                    result.mapFailure((Function<Integer, String>) null)
-            );
-        }
-
-        @Test
-        @DisplayName("mapFailure (Function) should apply mapper when result is a failure")
-        public void mapFailure_function_should_apply_mapper_when_result_is_a_failure() {
-            // given
-            Result<String, Integer> failure = failure(3);
-
-            // when
-            Result<String, String> mapped = failure.mapFailure((Function<? super Integer, String>) i -> Stream.generate(() -> "a").limit(i).reduce("", String::concat));
-
-            // then
-            assertThat(mapped).isEqualTo(failure("aaa"));
-        }
-
-        @Test
-        @DisplayName("mapFailure (Function) should return current success when result is a success")
-        public void mapFailure_function_should_return_current_success_when_result_is_a_success() {
-            // given
-            Result<String, Integer> failure = success("should be preserved");
-
-            // when
-            Result<String, Integer> mapped = failure.mapFailure(i -> i + 14);
-
-            // then
-            assertThat(mapped).isEqualTo(success("should be preserved"));
-        }
-
-        @Test
-        @DisplayName("mapFailure (Function) should not apply mapper when result is a success")
-        public void mapFailure_function_should_not_apply_mapper_when_result_is_a_success() {
-            // given
-            Result<String, Integer> success = success("this is indubitably a a success");
-            Function<Integer, Integer> spiedMapper = spiedFunction(i -> i);
-
-            // when
-            success.mapFailure(spiedMapper);
-
-            // then
-            verify(spiedMapper, never()).apply(any());
-        }
-
-        @ParameterizedTest(name = "mapFailure (Supplier) should not accept null parameter when result is {0}")
-        @MethodSource("successAndFailure")
-        public void mapFailure_supplier_should_not_accept_null_parameter(Result<String, Integer> result) {
-            assertThrows(NullPointerException.class, () ->
-                    result.mapFailure((Supplier<String>) null)
-            );
-        }
-
-        @Test
-        @DisplayName("mapFailure (Supplier) should apply mapper when result is a failure")
-        public void mapFailure_supplier_should_apply_mapper_when_result_is_a_failure() {
-            // given
-            Result<String, Integer> failure = failure(3);
-
-            // when
-            Result<String, String> mapped = failure.mapFailure(() -> "created");
-
-            // then
-            assertThat(mapped).isEqualTo(failure("created"));
-        }
-
-        @Test
-        @DisplayName("mapFailure (Supplier) should return current success when result is a success")
-        public void mapFailure_supplier_should_return_current_success_when_result_is_a_success() {
-            // given
-            Result<String, Integer> failure = success("should be preserved");
-
-            // when
-            Result<String, Integer> mapped = failure.mapFailure(() -> 41);
-
-            // then
-            assertThat(mapped).isEqualTo(success("should be preserved"));
-        }
-
-        @Test
-        @DisplayName("mapFailure (Supplier) should not apply mapper when result is a success")
-        public void mapFailure_supplier_should_not_apply_mapper_when_result_is_a_success() {
-            // given
-            Result<String, Integer> success = success("this is indubitably a a success");
-            Supplier<Number> spiedMapper = spiedSupplier(() -> 15.42);
-
-            // when
-            success.mapFailure(spiedMapper);
-
-            // then
-            verify(spiedMapper, never()).get();
-        }
-
-        @ParameterizedTest(name = "mapFailure (Consumer) should not accept null parameter when result is {0}")
-        @MethodSource("successAndFailure")
-        public void mapFailure_consumer_should_not_accept_null_parameter(Result<String, Integer> result) {
-            assertThrows(NullPointerException.class, () ->
-                    result.mapFailure((Consumer<? super Integer>) null)
-            );
-        }
-
-        @Test
-        @DisplayName("mapFailure (Consumer) should apply mapper when result is a failure")
-        public void mapFailure_consumer_should_apply_mapper_when_result_is_a_failure() {
-            // given
-            Result<String, Integer> failure = failure(3);
-
-            // when
-            Optional<String> mapped = failure.mapFailure(i -> {});
-
-            // then
-            assertThat(mapped).isEqualTo(Optional.empty());
-        }
-
-        @Test
-        @DisplayName("mapFailure (Consumer) should return current success when result is a success")
-        public void mapFailure_consumer_should_return_current_success_when_result_is_a_success() {
-            // given
-            Result<String, Integer> failure = success("should be preserved");
-
-            // when
-            Optional<String> mapped = failure.mapFailure(i -> {});
-
-            // then
-            assertThat(mapped).isEqualTo(Optional.of("should be preserved"));
-        }
-
-        @Test
-        @DisplayName("mapFailure (Consumer) should not apply mapper when result is a success")
-        public void mapFailure_consumer_should_not_apply_mapper_when_result_is_a_success() {
-            // given
-            Result<String, Integer> success = success("this is indubitably a a success");
-            Consumer<Number> spiedConsumer = spiedConsumer();
-
-            // when
-            success.mapFailure(spiedConsumer);
-
-            // then
-            verify(spiedConsumer, never()).accept(any());
+                // then
+                verify(spiedConsumer, never()).accept(any());
+            }
         }
     }
 
@@ -1351,7 +1371,7 @@ class ResultTest {
 
                     // then
                     assertThat(results)
-                            .isEqualTo(failure(Set.of(12, 17,14, 24)));
+                            .isEqualTo(failure(Set.of(12, 17, 14, 24)));
                 }
             }
         }
