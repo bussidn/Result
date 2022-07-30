@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 /**
  * Result that does not have a success value
  */
-public interface VoidResult<F> {
+public sealed interface VoidResult<F> permits Success, Failure {
 
     /**
      * Static factory to create an untyped success

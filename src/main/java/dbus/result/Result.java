@@ -19,7 +19,7 @@ import java.util.stream.Collector;
  * @param <S> the success type
  * @param <F> the failure type
  */
-public interface Result<S, F> {
+public sealed interface Result<S, F> permits Success, Failure {
 
     /**
      * Static factory to create a success
