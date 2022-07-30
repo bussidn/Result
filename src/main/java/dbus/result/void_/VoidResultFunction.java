@@ -4,6 +4,7 @@ import dbus.result.Result;
 import dbus.result.ResultFunction;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -56,6 +57,53 @@ public interface VoidResultFunction<T, F> extends Function<T, VoidResult<F>> {
     default <S> ResultFunction<T, S, F> map(Supplier<? extends S> supplier) {
         requireNonNull(supplier);
         return t -> this.apply(t).map(supplier);
+    }
+
+    /**
+     * compose the failure side of the current {@link VoidResultFunction} with a failure mapping function.
+     * <p>
+     * It applies the provided mapper after this.
+     *
+     * @param mapper the mapper to apply after this
+     * @param <R>    the new failure return type
+     * @return a {@link VoidResultFunction} composing this and the mapper
+     * @throws NullPointerException when provided mapper is null
+     * @see VoidResult#mapFailure(Function)
+     */
+    default <R> VoidResultFunction<T, R> mapFailure(Function<? super F, ? extends R> mapper) {
+        requireNonNull(mapper);
+        return t -> this.apply(t).mapFailure(mapper);
+    }
+
+    /**
+     * compose the failure side of the current {@link VoidResultFunction} with a supplier.
+     * <p>
+     * It applies the provided supplier after this.
+     *
+     * @param supplier the mapper to apply after this
+     * @param <R>      the new failure return type
+     * @return a {@link VoidResultFunction} composing this and the mapper
+     * @throws NullPointerException when provided supplier is null
+     * @see VoidResult#mapFailure(Supplier)
+     */
+    default <R> VoidResultFunction<T, R> mapFailure(Supplier<? extends R> supplier) {
+        requireNonNull(supplier);
+        return t -> this.apply(t).mapFailure(supplier);
+    }
+
+    /**
+     * compose the failure side of the current {@link VoidResultFunction} with a consumer.
+     * <p>
+     * It applies the provided consumer after the current {@link VoidResultFunction}.
+     *
+     * @param consumer the consumer to apply after this
+     * @return a {@link VoidResultFunction} composing this and the provided consumer
+     * @throws NullPointerException when provided consumer is null
+     * @see VoidResult#mapFailure(Consumer)
+     */
+    default Consumer<T> mapFailure(Consumer<? super F> consumer) {
+        requireNonNull(consumer);
+        return t -> this.apply(t).mapFailure(consumer);
     }
 
     /**

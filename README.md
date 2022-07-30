@@ -43,13 +43,12 @@ This library intend to provide most of composition-generic-methods to easily com
   - VoidResult (Function & Supplier)
   - VoidResultFunction (Function & Supplier)
 - collect function (Results with reducing strategy)
-- mapFailure (([Function, Supplier, Consumer] <*> [Result, ResultFunction, VoidResult])
+- mapFailure (([Function, Supplier, Consumer] <*> [Result, ResultFunction, VoidResult, VoidResultFunction])
   
 ### ToDo
 
 #### V.1 ?
 
-- mapFailure ([Function, Supplier, Consumer] <*> [VoidResultFunction])
 - bridge functions (toVoidResult, toVoidResultFunction, toVoid ?)
 - structure helpers (from boolean & predicate)
 - aggregation methods
@@ -60,3 +59,4 @@ This library intend to provide most of composition-generic-methods to easily com
 
 - primitive results (intResult, doubleResult, etc.) ?
 - Observable with failure type ?
+- flatMapFailure ?

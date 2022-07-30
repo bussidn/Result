@@ -123,7 +123,7 @@ public interface ResultFunction<T, S, F> extends Function<T, Result<S, F>> {
      * @param consumer the consumer to apply after this
      * @return a {@link VoidResultFunction} composing this and the provided consumer
      * @throws NullPointerException when provided consumer is null
-     * @see Result#map(Consumer)
+     * @see Result#mapFailure(Consumer)
      */
     default Function<T, Optional<S>> mapFailure(Consumer<? super F> consumer) {
         requireNonNull(consumer);

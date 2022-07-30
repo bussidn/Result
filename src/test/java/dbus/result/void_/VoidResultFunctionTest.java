@@ -2,6 +2,7 @@ package dbus.result.void_;
 
 import dbus.result.Result;
 import org.assertj.core.api.Assertions;
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -20,9 +22,8 @@ import static dbus.result.void_.VoidResult.success;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 class VoidResultFunctionTest {
 
@@ -53,132 +54,302 @@ class VoidResultFunctionTest {
     @Nested
     class Map {
 
-        @Test
-        public void map_runnable_should_be_provided_with_non_null_mapper() {
-            // given
-            VoidResultFunction<String, String> resultFunction = VoidResult::failure;
+        @Nested
+        class SuccessSide {
 
-            // then
-            assertThrows(NullPointerException.class, () ->
-                    resultFunction.map((Runnable) null)
-            );
+            @Test
+            public void map_runnable_should_be_provided_with_non_null_mapper() {
+                // given
+                VoidResultFunction<String, String> resultFunction = VoidResult::failure;
+
+                // then
+                assertThrows(NullPointerException.class, () ->
+                        resultFunction.map((Runnable) null)
+                );
+            }
+
+            @Test
+            public void map_runnable_should_return_the_failure_when_composing_void_result_function_returns_a_failure() {
+                // given
+                VoidResultFunction<String, String> resultFunction = VoidResult::failure;
+                Runnable runnable = () -> {
+                };
+
+                // when
+                var composed = resultFunction.map(runnable);
+
+                // then
+                assertThat(composed.apply("because")).isEqualTo(failure("because"));
+            }
+
+            @Test
+            public void map_runnable_should_not_execute_the_provided_runnable_when_composing_void_result_function_returns_a_failure() {
+                // given
+                VoidResultFunction<String, String> resultFunction = VoidResult::failure;
+                Runnable runnable = spiedRunnable();
+
+                // when
+                resultFunction.map(runnable).apply("should not run the runnable");
+
+                // then
+                verify(runnable, never()).run();
+            }
+
+            @Test
+            public void map_runnable_should_return_a_success_when_composing_void_result_function_returns_a_success() {
+                // given
+                VoidResultFunction<String, String> resultFunction = s -> success();
+                Runnable runnable = () -> {
+                };
+
+                // when
+                var composed = resultFunction.map(runnable);
+
+                // then
+                assertThat(composed.apply("should lead to a void success")).isEqualTo(success());
+            }
+
+            @Test
+            public void map_runnable_should_execute_the_provided_runnable_when_composing_void_result_function_returns_a_success() {
+                // given
+                VoidResultFunction<String, String> resultFunction = s -> success();
+                Runnable runnable = spiedRunnable();
+
+                // when
+                resultFunction.map(runnable).apply("should run runnable");
+
+                // then
+                verify(runnable).run();
+            }
+
+            @Test
+            public void map_supplier_should_be_provided_with_non_null_consumer() {
+                // given
+                VoidResultFunction<String, String> resultFunction = VoidResult::failure;
+
+                // then
+                assertThrows(NullPointerException.class, () ->
+                        resultFunction.map((Supplier<?>) null)
+                );
+            }
+
+            @Test
+            public void map_supplier_should_return_the_failure_when_composing_void_result_function_returns_a_failure() {
+                // given
+                VoidResultFunction<String, String> resultFunction = VoidResult::failure;
+                Supplier<String> supplier = () -> "success";
+
+                // when
+                var composed = resultFunction.map(supplier);
+
+                // then
+                assertThat(composed.apply("because")).isEqualTo(Result.failure("because"));
+            }
+
+            @Test
+            public void map_supplier_should_not_execute_the_provided_supplier_when_composing_void_result_function_returns_a_failure() {
+                // given
+                VoidResultFunction<String, String> resultFunction = VoidResult::failure;
+                Supplier<String> supplier = spiedSupplier(() -> "success");
+
+                // when
+                resultFunction.map(supplier).apply("should not execute the supplier");
+
+                // then
+                verify(supplier, never()).get();
+            }
+
+            @Test
+            public void map_supplier_should_return_a_success_when_composing_void_result_function_returns_a_success() {
+                // given
+                VoidResultFunction<String, String> resultFunction = s -> success();
+                Supplier<String> supplier = () -> "success";
+
+                // when
+                var composed = resultFunction.map(supplier);
+
+                // then
+                assertThat(composed.apply("should lead to a success")).isEqualTo(Result.success("success"));
+            }
+
+            @Test
+            public void map_supplier_should_execute_the_provided_supplier_when_composing_void_result_function_returns_a_success() {
+                // given
+                VoidResultFunction<String, String> resultFunction = s -> success();
+                Supplier<String> supplier = spiedSupplier(() -> "success");
+
+                // when
+                resultFunction.map(supplier).apply("should run supplier");
+
+                // then
+                verify(supplier).get();
+            }
         }
 
-        @Test
-        public void map_runnable_should_return_the_failure_when_composing_void_result_function_returns_a_failure() {
-            // given
-            VoidResultFunction<String, String> resultFunction = VoidResult::failure;
-            Runnable runnable = () -> {
-            };
+        @Nested
+        class FailureSide {
 
-            // when
-            var composed = resultFunction.map(runnable);
+            @Test
+            @DisplayName("Failure (Function) should be provided with non null mapper")
+            public void mapFailure_function_should_be_provided_with_non_null_mapper() {
+                // given
+                VoidResultFunction<String, String> resultFunction = s -> VoidResult.success();
 
-            // then
-            assertThat(composed.apply("because")).isEqualTo(failure("because"));
-        }
+                // then
+                assertThrows(NullPointerException.class, () ->
+                        resultFunction.mapFailure((Function<String, Integer>) null)
+                );
+            }
 
-        @Test
-        public void map_runnable_should_not_execute_the_provided_runnable_when_composing_void_result_function_returns_a_failure() {
-            // given
-            VoidResultFunction<String, String> resultFunction = VoidResult::failure;
-            Runnable runnable = spiedRunnable();
+            @Test
+            @DisplayName("mapFailure (Function) composed function should execute provided mapper when initial result is a failure")
+            public void mapFailure_function_composed_function_should_execute_provided_mapper_when_initial_result_is_a_failure() {
+                // given
+                VoidResultFunction<String, String> failingInitialFunction = VoidResult::failure;
+                Function<String, Integer> mapper = String::length;
 
-            // when
-            resultFunction.map(runnable).apply("should not run the runnable");
+                // when
+                var composed = failingInitialFunction.mapFailure(mapper);
 
-            // then
-            verify(runnable, never()).run();
-        }
+                // then
+                AssertionsForClassTypes.assertThat(composed.apply("should be 12")).isEqualTo(VoidResult.failure(12));
+            }
 
-        @Test
-        public void map_runnable_should_return_a_success_when_composing_void_result_function_returns_a_success() {
-            // given
-            VoidResultFunction<String, String> resultFunction = s -> success();
-            Runnable runnable = () -> {
-            };
+            @Test
+            @DisplayName("mapFailure (Function) composed function should return initial result when initial result is a success")
+            public void mapFailure_function_composed_function_should_return_initial_result_when_initial_result_is_a_success() {
+                // given
+                VoidResultFunction<String, String> successfulInitialFunction = s -> VoidResult.success();
+                Function<String, Integer> mapper = String::length;
 
-            // when
-            var composed = resultFunction.map(runnable);
+                // when
+                var composed = successfulInitialFunction.mapFailure(mapper);
 
-            // then
-            assertThat(composed.apply("should lead to a void success")).isEqualTo(success());
-        }
+                // then
+                AssertionsForClassTypes.assertThat(composed.apply("should succeed")).isEqualTo(VoidResult.<String>success());
+            }
 
-        @Test
-        public void map_runnable_should_execute_the_provided_runnable_when_composing_void_result_function_returns_a_success() {
-            // given
-            VoidResultFunction<String, String> resultFunction = s -> success();
-            Runnable runnable = spiedRunnable();
+            @Test
+            @DisplayName("mapFailure (Function) composed function should not execute provided mapper when initial result is a success")
+            public void mapFailure_function_composed_function_should_not_execute_provided_mapper_when_initial_result_is_a_success() {
+                // given
+                VoidResultFunction<String, String> successfulInitialFunction = s -> VoidResult.success();
+                Function<String, Integer> spiedFunction = spiedFunction(String::length);
 
-            // when
-            resultFunction.map(runnable).apply("should run runnable");
+                // when
+                successfulInitialFunction.mapFailure(spiedFunction);
 
-            // then
-            verify(runnable).run();
-        }
+                // then
+                verify(spiedFunction, never()).apply(any());
+            }
 
-        @Test
-        public void map_supplier_should_be_provided_with_non_null_consumer() {
-            // given
-            VoidResultFunction<String, String> resultFunction = VoidResult::failure;
+            @Test
+            @DisplayName("mapFailure (Supplier) should be provided with non null supplier")
+            public void mapFailure_supplier_should_be_provided_with_non_null_supplier() {
+                // given
+                VoidResultFunction<String, String> resultFunction = s -> VoidResult.success();
 
-            // then
-            assertThrows(NullPointerException.class, () ->
-                    resultFunction.map((Supplier<?>) null)
-            );
-        }
+                // then
+                assertThrows(NullPointerException.class, () ->
+                        resultFunction.mapFailure((Supplier<Integer>) null)
+                );
+            }
 
-        @Test
-        public void map_supplier_should_return_the_failure_when_composing_void_result_function_returns_a_failure() {
-            // given
-            VoidResultFunction<String, String> resultFunction = VoidResult::failure;
-            Supplier<String> supplier = () -> "success";
+            @Test
+            @DisplayName("mapFailure (Supplier) composed function should execute provided mapper when initial result is a failure")
+            public void mapFailure_supplier_composed_function_should_execute_provided_mapper_when_initial_result_is_a_failure() {
+                // given
+                VoidResultFunction<String, String> failingInitialFunction = VoidResult::failure;
+                Supplier<Integer> mapper = () -> 17;
 
-            // when
-            var composed = resultFunction.map(supplier);
+                // when
+                var composed = failingInitialFunction.mapFailure(mapper);
 
-            // then
-            assertThat(composed.apply("because")).isEqualTo(Result.failure("because"));
-        }
+                // then
+                AssertionsForClassTypes.assertThat(composed.apply("should be 17")).isEqualTo(VoidResult.failure(17));
+            }
 
-        @Test
-        public void map_supplier_should_not_execute_the_provided_supplier_when_composing_void_result_function_returns_a_failure() {
-            // given
-            VoidResultFunction<String, String> resultFunction = VoidResult::failure;
-            Supplier<String> supplier = spiedSupplier(() -> "success");
+            @Test
+            @DisplayName("mapFailure (Supplier) composed function should return initial result when initial result is a success")
+            public void mapFailure_supplier_composed_function_should_return_initial_result_when_initial_result_is_a_success() {
+                // given
+                VoidResultFunction<String, String> successfulInitialFunction = s -> VoidResult.success();
+                Supplier<String> mapper = () -> "should not matter";
 
-            // when
-            resultFunction.map(supplier).apply("should not execute the supplier");
+                // when
+                var result = successfulInitialFunction.mapFailure(mapper);
 
-            // then
-            verify(supplier, never()).get();
-        }
+                // then
+                AssertionsForClassTypes.assertThat(result.apply("should succeed")).isEqualTo(VoidResult.<String>success());
+            }
 
-        @Test
-        public void map_supplier_should_return_a_success_when_composing_void_result_function_returns_a_success() {
-            // given
-            VoidResultFunction<String, String> resultFunction = s -> success();
-            Supplier<String> supplier = () -> "success";
+            @Test
+            @DisplayName("mapFailure (Supplier) composed function should not execute provided mapper when initial result is a success")
+            public void mapFailure_supplier_composed_function_should_not_execute_provided_mapper_when_initial_result_is_a_success() {
+                // given
+                VoidResultFunction<String, String> successfulInitialFunction = s -> VoidResult.success();
+                Supplier<Integer> spiedSupplier = spiedSupplier(() -> 5456);
 
-            // when
-            var composed = resultFunction.map(supplier);
+                // when
+                successfulInitialFunction.mapFailure(spiedSupplier);
 
-            // then
-            assertThat(composed.apply("should lead to a success")).isEqualTo(Result.success("success"));
-        }
+                // then
+                verify(spiedSupplier, never()).get();
+            }
 
-        @Test
-        public void map_supplier_should_execute_the_provided_supplier_when_composing_void_result_function_returns_a_success() {
-            // given
-            VoidResultFunction<String, String> resultFunction = s -> success();
-            Supplier<String> supplier = spiedSupplier(() -> "success");
+            @Test
+            @DisplayName("mapFailure (Consumer) should be provided with non null consumer")
+            public void mapFailure_consumer_should_be_provided_with_non_null_consumer() {
+                // given
+                VoidResultFunction<String, String> resultFunction = s -> VoidResult.success();
 
-            // when
-            resultFunction.map(supplier).apply("should run supplier");
+                // then
+                assertThrows(NullPointerException.class, () ->
+                        resultFunction.mapFailure((Consumer<String>) null)
+                );
+            }
 
-            // then
-            verify(supplier).get();
+            @Test
+            @DisplayName("mapFailure (Consumer) composed function should execute provided consumer when initial result is a failure")
+            public void mapFailure_consumer_composed_function_should_execute_provided_consumer_when_initial_result_is_a_failure() {
+                // given
+                VoidResultFunction<String, String> failingInitialFunction = VoidResult::failure;
+                Consumer<String> consumer = spiedConsumer();
+
+                // when
+                failingInitialFunction.mapFailure(consumer).accept("anyThing");
+
+                // then
+                verify(consumer).accept(any());
+            }
+
+            @Test
+            @DisplayName("mapFailure (Consumer) composed function should call provided consumer when initial result is a success")
+            public void mapFailure_consumer_composed_function_should_not_execute_provided_consumer_when_initial_result_is_a_success() {
+                // given
+                VoidResultFunction<String, String> successfulInitialFunction = s -> VoidResult.success();
+                Consumer<String> consumer = spiedConsumer();
+
+                // when
+                successfulInitialFunction.mapFailure(consumer).accept("anything");
+
+                // then
+                verify(consumer, times(0)).accept(any());
+            }
+
+            @Test
+            @DisplayName("mapFailure (Consumer) composed function should not execute provided mapper when initial result is a success")
+            public void mapFailure_consumer_composed_function_should_not_execute_provided_mapper_when_initial_result_is_a_success() {
+                // given
+                VoidResultFunction<String, String> successfulInitialFunction = s -> VoidResult.success();
+                Consumer<String> spiedConsumer = spiedConsumer();
+
+                // when
+                successfulInitialFunction.mapFailure(spiedConsumer);
+
+                // then
+                verify(spiedConsumer, never()).accept(any());
+            }
         }
     }
 

@@ -151,7 +151,7 @@ public interface VoidResult<F> {
     /**
      * try to recover from the current failure, if any.
      * The provided recovering function may also fail, making this an attempt at recovering.
-     *
+     * <p>
      * If current state is a success, it is returned.
      *
      * @param recoveringFunction function to apply to the current failure if current state is a failure.
@@ -163,7 +163,7 @@ public interface VoidResult<F> {
     /**
      * try to recover from the current failure, if any.
      * The provided recovering function may also fail, making this an attempt at recovering.
-     *
+     * <p>
      * If current state is a success, it is returned.
      *
      * @param recoveringSupplier supplier to execute if current state is a failure.
