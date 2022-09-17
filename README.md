@@ -75,18 +75,18 @@ Then add the dependency :
     - VoidResultFunction (Function & Supplier)
 - collect function (Results with reducing strategy)
 - mapFailure (([Function, Supplier, Consumer] <*> [Result, ResultFunction, VoidResult, VoidResultFunction])
+- structure helpers (from boolean & predicate)
 
 ### ToDo
 
 #### V.1 ?
 
-- bridge functions (toVoidResult, toVoidResultFunction, toVoid ?)
-- structure helpers (from boolean & predicate)
+- structure helpers (from throwing function)
 - aggregation methods
 - transformation methods (Stream, Optional)
+- bridge functions (toVoidResult, toVoidResultFunction, toVoid ?)
 
 #### long term goals
 
 - primitive results (intResult, doubleResult, etc.) ?
 - Observable with failure type ?
-- flatMapFailure ?

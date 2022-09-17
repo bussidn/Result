@@ -61,6 +61,42 @@ public sealed interface Result<S, F> permits Success, Failure {
     }
 
     /**
+     * Generates a void result depending on the value of the provided boolean.
+     * If the provided boolean is true, the result will be a success, else, it will
+     * return a failure containing the provided failure.
+     * <p>
+     * this serves as an alternative access point of {@link VoidResult#successIf(boolean, Object)}
+     *
+     * @param bool the boolean that serves as a test
+     * @param failure the failure to wrap in case provide {@code bool} is false
+     * @return a void result
+     * @param <F> the failure type
+     * @throws NullPointerException when provided failure is null
+     * @see VoidResult#successIf(boolean, Object)
+     */
+    static <F> VoidResult<F> successIf(boolean bool, F failure) {
+        return VoidResult.successIf(bool, failure);
+    }
+
+    /**
+     * Generates a void result depending on the value of the provided boolean.
+     * If the provided boolean is true, the result will be a success, else, it will
+     * return a failure containing the failure returned by the provided supplier.
+     * <p>
+     * this serves as an alternative access point of {@link VoidResult#successIf(boolean, Supplier)}
+     *
+     * @param bool the boolean that serves as a test
+     * @param failure a supplier of the failure to wrap in case provide {@code bool} is false
+     * @return a void result
+     * @param <F> the failure type
+     * @throws NullPointerException when provided failure is null
+     * @see VoidResult#successIf(boolean, Supplier)
+     */
+    static <F> VoidResult<F> successIf(boolean bool, Supplier<? extends F> failure) {
+        return VoidResult.successIf(bool, failure);
+    }
+
+    /**
      * Pattern matching emulation on Result deconstructed subtypes.
      * <p>
      * Indented to be used to provide the two desired behavior in case of success or failure.

@@ -6,6 +6,7 @@ import dbus.result.void_.VoidResultFunction;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
@@ -34,6 +35,44 @@ public interface ResultFunction<T, S, F> extends Function<T, Result<S, F>> {
     static <T, S, F> ResultFunction<T, S, F> asResultFunction(Function<? super T, ? extends Result<? extends S, ? extends F>> f) {
         requireNonNull(f);
         return t -> Result.narrow(f.apply(t));
+    }
+
+    /**
+     * Generates a void result function depending on the value of the provided boolean.
+     * If the provided boolean is true, the result will be a success, else, it will
+     * return a failure containing the provided failure.
+     * <p>
+     * this serves as an alternative access point of {@link VoidResultFunction#successIf(Predicate, Object)}
+     *
+     * @param predicate predicate that serves as a test
+     * @param failure the failure to wrap in case provide {@code bool} is false
+     * @return a void result
+     * @param <F> the failure type
+     * @throws NullPointerException when provided predicate is null
+     * @throws NullPointerException when provided failure is null
+     * @see VoidResultFunction#successIf(Predicate, Object)
+     */
+    static <T, F> VoidResultFunction<T, F> successIf(Predicate<T> predicate, F failure) {
+        return VoidResultFunction.successIf(predicate, failure);
+    }
+
+    /**
+     * Generates a void result function depending on the value of the provided boolean.
+     * If the provided boolean is true, the result will be a success, else, it will
+     * return a failure containing the failure returned by the provided supplier.
+     * <p>
+     * this serves as an alternative access point of {@link VoidResultFunction#successIf(Predicate, Supplier)}
+     *
+     * @param predicate predicate that serves as a test
+     * @param failure a supplier of the failure to wrap in case provide {@code bool} is false
+     * @return a void result
+     * @param <F> the failure type
+     * @throws NullPointerException when predicate failure is null
+     * @throws NullPointerException when provided failure is null
+     * @see VoidResultFunction#successIf(Predicate, Supplier)
+     */
+    static <T, F> VoidResultFunction<T, F> successIf(Predicate<T> predicate, Supplier<? extends F> failure) {
+        return VoidResultFunction.successIf(predicate, failure);
     }
 
     /**

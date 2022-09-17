@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static dbus.result.MockitoLambdaSpying.*;
+import static dbus.result.Result.successIf;
 import static dbus.result.Result.*;
 import static dbus.result.Results.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -66,6 +67,82 @@ class ResultTest {
             assertThrows(NullPointerException.class, () ->
                     failure(null)
             );
+        }
+
+        @Nested
+        class FromBoolean {
+
+            @Test
+            @DisplayName("successIf (bool, Object) should not be provided null failure")
+            public void success_if_should_not_be_provided_null_failure() {
+
+                assertThrows(NullPointerException.class, () -> successIf(true, null));
+            }
+
+            @Test
+            @DisplayName("successIf (bool, Object) should return success when provided boolean is true")
+            public void success_if_should_return_success_when_provided_boolean_is_true() {
+
+                // when
+                VoidResult<String> result = successIf(true, "failure");
+
+                // then
+                assertThat(result).isEqualTo(VoidResult.success());
+            }
+
+            @Test
+            @DisplayName("successIf (bool, Object) should return failure when provided boolean is false")
+            public void success_if_should_return_failure_when_provided_boolean_is_false() {
+
+                // when
+                VoidResult<String> result = successIf(false, "failure");
+
+                // then
+                assertThat(result).isEqualTo(VoidResult.failure("failure"));
+            }
+
+            @Test
+            @DisplayName("successIf (bool, Supplier) should not be provided null failure supplier")
+            public void success_supplier_if_should_not_be_provided_null_failure_supplier() {
+
+                assertThrows(NullPointerException.class, () -> successIf(true, null));
+            }
+
+            @Test
+            @DisplayName("successIf (bool, Supplier) should return success when provided boolean is true")
+            public void success_supplier_if_should_return_success_when_provided_boolean_is_true() {
+
+                // when
+                VoidResult<String> result = successIf(true, () -> "failure not to be supplied");
+
+                // then
+                assertThat(result).isEqualTo(VoidResult.success());
+            }
+
+            @Test
+            @DisplayName("successIf (bool, Supplier) should not execute provided failure supplier when provided boolean is true")
+            public void success_supplier_if_should_not_execute_provided_supplier_when_provided_boolean_is_true() {
+                // given
+                Supplier<String> spiedSupplier = spiedSupplier(() -> "failure not to be supplied");
+
+                // when
+                successIf(true, spiedSupplier);
+
+                // then
+                verify(spiedSupplier, never()).get();
+            }
+
+            @Test
+            @DisplayName("successIf (bool, Supplier) should return failure when provided boolean is false")
+            public void success_supplier_if_should_return_failure_when_provided_boolean_is_false() {
+
+                // when
+                VoidResult<String> result = successIf(false, () -> "failure to be supplied");
+
+                // then
+                assertThat(result).isEqualTo(VoidResult.failure("failure to be supplied"));
+            }
+
         }
 
     }
@@ -1010,7 +1087,7 @@ class ResultTest {
                     );
 
                     // when
-                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(successIf(anySuccess())));
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(Results.successIf(anySuccess())));
 
                     // then
                     assertThat(results).isEqualTo(success(List.of("success 1", "success 2", "success 3")));
@@ -1026,7 +1103,7 @@ class ResultTest {
                     );
 
                     // when
-                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(successIf(anySuccess())));
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(Results.successIf(anySuccess())));
 
                     // then
                     assertThat(results).isEqualTo(Result.failure(List.of(1, 2)));
@@ -1047,7 +1124,7 @@ class ResultTest {
                     );
 
                     // when
-                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(successIf(noSuccess())));
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(Results.successIf(noSuccess())));
 
                     // then
                     assertThat(results).isEqualTo(success(List.of()));
@@ -1064,7 +1141,7 @@ class ResultTest {
                     );
 
                     // when
-                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(successIf(noSuccess())));
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(Results.successIf(noSuccess())));
 
                     // then
                     assertThat(results).isEqualTo(Result.failure(List.of(1, 2)));
@@ -1086,7 +1163,7 @@ class ResultTest {
                     );
 
                     // when
-                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(successIf(noFailure())));
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(Results.successIf(noFailure())));
 
                     // then
                     assertThat(results).isEqualTo(success(List.of("success 1", "success 2", "success 3")));
@@ -1104,7 +1181,7 @@ class ResultTest {
                     );
 
                     // when
-                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(successIf(noFailure())));
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(Results.successIf(noFailure())));
 
                     // then
                     assertThat(results).isEqualTo(failure(List.of(54)));
@@ -1127,7 +1204,7 @@ class ResultTest {
                     );
 
                     // when
-                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(successIf(anyFailure())));
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(Results.successIf(anyFailure())));
 
                     // then
                     assertThat(results).isEqualTo(success(List.of("success 1", "success 2", "success 3")));
@@ -1144,7 +1221,7 @@ class ResultTest {
                     );
 
                     // when
-                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(successIf(anyFailure())));
+                    Result<Collection<String>, Collection<Integer>> results = resultStream.collect(collector(Results.successIf(anyFailure())));
 
                     // then
                     assertThat(results).isEqualTo(failure(List.of()));

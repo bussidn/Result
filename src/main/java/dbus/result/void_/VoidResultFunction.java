@@ -6,6 +6,7 @@ import dbus.result.ResultFunction;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
@@ -25,6 +26,40 @@ public interface VoidResultFunction<T, F> extends Function<T, VoidResult<F>> {
     static <T, F> VoidResultFunction<T, F> asVoidResultFunction(Function<? super T, ? extends VoidResult<? extends F>> f) {
         Objects.requireNonNull(f);
         return t -> VoidResult.narrow(f.apply(t));
+    }
+
+    /**
+     * Generates a void result depending on the value of the provided boolean.
+     * If the provided boolean is true, the result will be a success, else, it will
+     * return a failure containing the provided failure.
+     *
+     * @param predicate predicate that serves as a test
+     * @param failure the failure to wrap in case provide {@code bool} is false
+     * @return a void result
+     * @param <F> the failure type
+     * @throws NullPointerException when provided failure is null
+     */
+    static <T, F> VoidResultFunction<T, F> successIf(Predicate<T> predicate, F failure) {
+        requireNonNull(predicate);
+        requireNonNull(failure);
+        return t -> VoidResult.successIf(predicate.test(t), failure);
+    }
+
+    /**
+     * Generates a void result depending on the value of the provided boolean.
+     * If the provided boolean is true, the result will be a success, else, it will
+     * return a failure containing the failure returned by the provided supplier.
+     *
+     * @param predicate predicate that serves as a test
+     * @param failure a supplier of the failure to wrap in case provide {@code bool} is false
+     * @return a void result
+     * @param <F> the failure type
+     * @throws NullPointerException when provided failure is null
+     */
+    static <T, F> VoidResultFunction<T, F> successIf(Predicate<T> predicate, Supplier<? extends F> failure) {
+        requireNonNull(predicate);
+        requireNonNull(failure);
+        return t -> VoidResult.successIf(predicate.test(t), failure);
     }
 
     /**

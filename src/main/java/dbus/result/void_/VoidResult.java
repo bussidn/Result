@@ -6,6 +6,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Result that does not have a success value
  */
@@ -43,6 +45,37 @@ public sealed interface VoidResult<F> permits Success, Failure {
      */
     static <F> VoidResult<F> narrow(VoidResult<? extends F> voidResult) {
         return voidResult.match(VoidResult::success, VoidResult::failure);
+    }
+
+    /**
+     * generates a void result depending on the value of the provided boolean.
+     * If the provided boolean is true, the result will be a success, else, it will
+     * return a failure containing the provided failure.
+     *
+     * @param bool the boolean that serves as a test
+     * @param failure the failure to wrap in case provide {@code bool} is false
+     * @return a void result
+     * @param <F> the failure type
+     */
+    static <F> VoidResult<F> successIf(boolean bool, F failure) {
+        requireNonNull(failure);
+        return bool ? VoidResult.success() : VoidResult.failure(failure);
+    }
+
+    /**
+     * generates a void result depending on the value of the provided boolean.
+     * If the provided boolean is true, the result will be a success, else, it will
+     * return a failure containing the provided failure.
+     *
+     * @param bool the boolean that serves as a test
+     * @param failure the failure to wrap in case provide {@code bool} is false
+     * @return a void result
+     * @param <F> the failure type
+     * @throws NullPointerException when provided failure is null
+     */
+    static <F> VoidResult<F> successIf(boolean bool, Supplier<? extends F> failure) {
+        requireNonNull(failure);
+        return bool ? VoidResult.success() : VoidResult.failure(failure.get());
     }
 
     /**

@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 import static dbus.result.MockitoLambdaSpying.*;
 import static dbus.result.Result.failure;
 import static dbus.result.Result.success;
+import static dbus.result.ResultFunction.successIf;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
@@ -33,25 +34,121 @@ import static org.mockito.Mockito.verify;
 class ResultFunctionTest {
 
     @Nested
-    class Conversion {
-        @Test
-        public void asResultFunction_should_not_accept_null_input() {
-            //noinspection ResultOfMethodCallIgnored
-            assertThrows(NullPointerException.class, () ->
-                    ResultFunction.<Integer, String, Object>asResultFunction(null));
+    class Creation {
+
+        @Nested
+        class Conversion {
+            @Test
+            public void asResultFunction_should_not_accept_null_input() {
+                //noinspection ResultOfMethodCallIgnored
+                assertThrows(NullPointerException.class, () ->
+                        ResultFunction.<Integer, String, Object>asResultFunction(null));
+            }
+
+            @Test
+            public void asResultFunction_should_convert_a_returning_result_function_to_a_result_function() {
+                // given
+                Function<Number, Result<String, String>> f = n -> success(n.toString());
+
+                // when
+                ResultFunction<Integer, Object, Object> converted = ResultFunction.asResultFunction(f);
+
+                // then
+                assertThat(converted.apply(12)).isEqualTo(f.apply(12));
+            }
         }
 
-        @Test
-        public void asResultFunction_should_convert_a_returning_result_function_to_a_result_function() {
-            // given
-            Function<Number, Result<String, String>> f = n -> success(n.toString());
 
-            // when
-            ResultFunction<Integer, Object, Object> converted = ResultFunction.asResultFunction(f);
+        @Nested
+        class FromPredicate {
 
-            // then
-            assertThat(converted.apply(12)).isEqualTo(f.apply(12));
+            @Test
+            @DisplayName("successIf (Predicate, Object) should not be provided null predicate")
+            public void success_if_should_not_be_provided_null_predicate() {
+
+                assertThrows(NullPointerException.class, () -> successIf(null, "some failure"));
+            }
+
+            @Test
+            @DisplayName("successIf (Predicate, Object) should not be provided null failure")
+            public void success_if_should_not_be_provided_null_failure() {
+
+                assertThrows(NullPointerException.class, () -> successIf(t -> true, (Object) null));
+            }
+
+            @Test
+            @DisplayName("successIf (Predicate, Object) returned function should return a success when tested predicate result is true")
+            public void success_if_returned_function_should_return_a_success_when_tested_predicate_result_is_true() {
+
+                // when
+                var function = successIf((String s) -> true, "failure");
+
+                // then
+                assertThat(function.apply("should succeed")).isEqualTo(VoidResult.success());
+            }
+
+            @Test
+            @DisplayName("successIf (Predicate, Object) returned function should return a success when tested predicate result is false")
+            public void success_if_returned_function_should_return_a_failure_when_tested_predicate_result_is_false() {
+
+                // when
+                var function = successIf((String s) -> false, "failure");
+
+                // then
+                assertThat(function.apply("should fail")).isEqualTo(VoidResult.failure("failure"));
+            }
+
+            @Test
+            @DisplayName("successIf (Predicate, Supplier) should not be provided null predicate")
+            public void success_if_supplier_should_not_be_provided_null_predicate() {
+
+                assertThrows(NullPointerException.class, () -> successIf(null, () -> "some failure"));
+            }
+
+            @Test
+            @DisplayName("successIf (Predicate, Supplier) should not be provided null failure")
+            public void success_if_supplier_should_not_be_provided_null_failure() {
+
+                assertThrows(NullPointerException.class, () -> successIf(t -> true, (Supplier<String>) null));
+            }
+
+            @Test
+            @DisplayName("successIf (Predicate, Supplier) returned function should return a success when tested predicate result is true")
+            public void success_if_supplier_returned_function_should_return_a_success_when_tested_predicate_result_is_true() {
+
+                // when
+                var function = successIf((String s) -> true, () -> "failure");
+
+                // then
+                assertThat(function.apply("should succeed")).isEqualTo(VoidResult.success());
+            }
+
+            @Test
+            @DisplayName("successIf (Predicate, Supplier) returned function should not execute provided supplier when tested predicate result is true")
+            public void success_if_supplier_returned_function_should_not_execute_provided_supplier_when_tested_predicate_result_is_true() {
+                // given
+                var spiedSupplier = spiedSupplier(() -> Integer.getInteger("0"));
+
+                // when
+                successIf((String s) -> true, spiedSupplier);
+
+                // then
+                verify(spiedSupplier, never()).get();
+            }
+
+            @Test
+            @DisplayName("successIf (Predicate, Supplier) returned function should return a success when tested predicate result is false")
+            public void success_if__supplier_returned_function_should_return_a_failure_when_tested_predicate_result_is_false() {
+
+                // when
+                var function = successIf((String s) -> false, () -> "failure");
+
+                // then
+                assertThat(function.apply("should fail")).isEqualTo(VoidResult.failure("failure"));
+            }
+
         }
+
     }
 
     @Nested
