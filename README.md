@@ -41,7 +41,7 @@ Then add the dependency :
 <dependency>
     <groupId>com.github.bussidn</groupId>
     <artifactId>Result</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.4</version>
 </dependency>
 ```
 
